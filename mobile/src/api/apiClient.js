@@ -21,10 +21,25 @@ apiClient.interceptors.response.use(
     console.log('- Full URL:', (error.config?.baseURL || '') + (error.config?.url || ''));
     console.log('- Message:', error.message);
 
-    const message = 
-      error.response?.data?.message || 
-      error.message || 
-      'Lỗi kết nối máy chủ';
+    const data = error.response?.data;
+    let message = '';
+
+    if (typeof data === 'string') {
+      message = data;
+    } else if (data?.message) {
+      message = data.message;
+    } else if (data?.errors && typeof data.errors === 'object') {
+      // Trích xuất câu lỗi đầu tiên trong mảng validation của ASP.NET Core
+      const errorKeys = Object.keys(data.errors);
+      if (errorKeys.length > 0) {
+        const firstError = data.errors[errorKeys[0]];
+        message = Array.isArray(firstError) ? firstError[0] : String(firstError);
+      }
+    }
+
+    if (!message) {
+      message = data?.title || error.message || 'Lỗi kết nối máy chủ';
+    }
 
     return Promise.reject(new Error(message));
   }
