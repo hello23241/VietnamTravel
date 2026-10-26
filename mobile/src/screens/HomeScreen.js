@@ -155,7 +155,7 @@ export default function HomeScreen({ navigation }) {
     <View style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
 
-      {/* Header chào mừng */}
+{/* Header chào mừng */}
       <View style={styles.header}>
         <View>
           <Text style={styles.appName}>VietGuide</Text>
@@ -163,15 +163,26 @@ export default function HomeScreen({ navigation }) {
             Xin chào, <Text style={styles.userName}>{currentUser ? currentUser.fullname : 'Khách'}</Text> 👋
           </Text>
         </View>
-        {currentUser ? (
-          <TouchableOpacity onPress={handleLogout} style={styles.authBtn}>
-            <Text style={styles.authBtnText}>Đăng xuất</Text>
+
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+          {/* Nút mở Sổ tay yêu thích */}
+          <TouchableOpacity 
+            onPress={() => navigation.navigate('Favorites')} 
+            style={styles.wishlistHeaderBtn}
+          >
+            <Text style={{ fontSize: 16 }}>❤️</Text>
           </TouchableOpacity>
-        ) : (
-          <TouchableOpacity onPress={() => navigation.replace('Login')} style={[styles.authBtn, styles.loginBtn]}>
-            <Text style={[styles.authBtnText, styles.loginBtnText]}>Đăng nhập</Text>
-          </TouchableOpacity>
-        )}
+
+          {currentUser ? (
+            <TouchableOpacity onPress={handleLogout} style={styles.authBtn}>
+              <Text style={styles.authBtnText}>Đăng xuất</Text>
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity onPress={() => navigation.replace('Login')} style={[styles.authBtn, styles.loginBtn]}>
+              <Text style={[styles.authBtnText, styles.loginBtnText]}>Đăng nhập</Text>
+            </TouchableOpacity>
+          )}
+        </View>
       </View>
 
       {/* Khung tìm kiếm */}
@@ -291,4 +302,5 @@ const styles = StyleSheet.create({
   emptyIcon: { fontSize: 40, marginBottom: 8 },
   emptyTitle: { fontSize: 16, fontWeight: 'bold', color: '#334155' },
   emptySubtitle: { fontSize: 13, color: '#94a3b8', textAlign: 'center', paddingHorizontal: 20, marginTop: 4 },
+  wishlistHeaderBtn: { width: 34, height: 34, borderRadius: 17, backgroundColor: '#fef2f2', justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: '#fecdd3' },
 });
