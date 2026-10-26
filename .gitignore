@@ -1,0 +1,64 @@
+# =============================================================================
+# 1. MÔI TRƯỜNG .NET / C# / ASP.NET CORE (BACKEND)
+# =============================================================================
+**/bin/
+**/obj/
+**/.vs/
+**/*.user
+**/*.userosscache
+**/*.suo
+**/*.userprefs
+
+# SQLite database và file journal/write-ahead log
+**/*.db
+**/*.db-shm
+**/*.db-wal
+**/*.sqlite
+**/*.sqlite3
+
+# Publish/Release output
+**/publish/
+**/out/
+
+# =============================================================================
+# 2. MÔI TRƯỜNG NODE.JS / REACT NATIVE / EXPO (MOBILE)
+# =============================================================================
+**/node_modules/
+**/.expo/
+**/.expo-shared/
+**/dist/
+**/web-build/
+
+# Logs
+**/npm-debug.*
+**/yarn-debug.*
+**/yarn-error.*
+**/pnpm-debug.*
+
+# Biến môi trường cục bộ (Bảo mật IP / API Key)
+**/.env
+**/.env.local
+**/.env.development.local
+**/.env.test.local
+**/.env.production.local
+
+# Android / iOS generated builds
+**/android/
+**/ios/
+**/*.apk
+**/*.aab
+
+# =============================================================================
+# 3. HỆ ĐIỀU HÀNH VÀ CÔNG CỤ LẬP TRÌNH (IDE)
+# =============================================================================
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# VS Code (Giữ lại cấu hình workspace nếu cần, bỏ qua file rác)
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.code-workspace
