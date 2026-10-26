@@ -15,9 +15,9 @@ export const travelApi = {
   getProvinces: (region) => 
     apiClient.get('/Provinces', { params: { region } }),
 
-  // Địa điểm
+  // Địa điểm du lịch (hỗ trợ categoryId, provinceId, tuKhoa, sortBy)
   getPlaces: (params) => 
-    apiClient.get('/Places', { params }), // params: { categoryId, provinceId, tuKhoa, sortBy, pageNumber, pageSize }
+    apiClient.get('/Places', { params }),
 
   getPlaceDetail: (id) => 
     apiClient.get(`/Places/${id}`),
@@ -25,13 +25,14 @@ export const travelApi = {
   getPlaceWeather: (id) => 
     apiClient.get(`/Places/${id}/weather`),
 
-  // Tương tác
+  // Sổ tay yêu thích
   toggleFavorite: (userId, placeId) => 
     apiClient.post('/Favorites/toggle', { userId, placeId }),
 
   getUserFavorites: (userId) => 
     apiClient.get(`/Favorites/user/${userId}`),
 
+  // Đánh giá
   getReviews: (placeId) => 
     apiClient.get('/Reviews', { params: { placeId } }),
 
