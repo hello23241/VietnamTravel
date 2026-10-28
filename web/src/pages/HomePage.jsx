@@ -27,6 +27,7 @@ export default function HomePage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedRegion, setSelectedRegion] = useState('all');
   const [selectedProvince, setSelectedProvince] = useState('');
+  const [provinceDetail, setProvinceDetail] = useState(null); // Chi tiết tỉnh từ GET /api/Provinces/{id}
   const [activeCategory, setActiveCategory] = useState('all');
   const [selectedSort, setSelectedSort] = useState('danhgia');
 
@@ -86,6 +87,7 @@ export default function HomePage() {
       const data = await travelApi.getProvinces(regParam);
       setProvinces(data || []);
       setSelectedProvince('');
+      setProvinceDetail(null);
     } catch (e) {
       console.log('Lỗi provinces:', e);
     }
@@ -102,10 +104,7 @@ export default function HomePage() {
         pageSize: 50,
       });
 
-      // Hỗ trợ cả trường hợp res có dạng { items: [...] } hoặc res trực tiếp là mảng [...]
       let items = res?.items || (Array.isArray(res) ? res : []);
-
-      // Lọc theo vùng miền nếu chưa chọn tỉnh cụ thể
       if (selectedRegion !== 'all' && !selectedProvince) {
         items = items.filter((p) => {
           if (!p.region) return true;
@@ -117,6 +116,22 @@ export default function HomePage() {
       console.log('Lỗi places:', e);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Gọi API GET /api/Provinces/{id} khi người dùng bấm chọn tỉnh
+  const handleSelectProvince = async (provIdStr) => {
+    if (selectedProvince === provIdStr) {
+      setSelectedProvince('');
+      setProvinceDetail(null);
+    } else {
+      setSelectedProvince(provIdStr);
+      try {
+        const detail = await travelApi.getProvinceDetail(provIdStr);
+        setProvinceDetail(detail);
+      } catch (e) {
+        setProvinceDetail(null);
+      }
     }
   };
 
@@ -292,13 +307,16 @@ export default function HomePage() {
               </button>
             </form>
 
-            {/* BỘ LỌC TỈNH THÀNH ĐỘNG TỪ BACKEND */}
+            {/* BỘ LỌC TỈNH THÀNH ĐỘNG */}
             {provinces.length > 0 && (
               <div className="flex items-center gap-1.5 pt-3 px-1 overflow-x-auto text-xs font-medium text-slate-600 border-t border-slate-100 mt-2">
                 <span className="text-slate-400 text-[11px] shrink-0 font-bold uppercase tracking-wider">Tỉnh thành:</span>
                 <button
                   type="button"
-                  onClick={() => setSelectedProvince('')}
+                  onClick={() => {
+                    setSelectedProvince('');
+                    setProvinceDetail(null);
+                  }}
                   className={`px-2.5 py-1 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors ${
                     selectedProvince === ''
                       ? 'bg-teal-600 text-white shadow-xs'
@@ -311,7 +329,7 @@ export default function HomePage() {
                   <button
                     key={p.id}
                     type="button"
-                    onClick={() => setSelectedProvince(selectedProvince === String(p.id) ? '' : String(p.id))}
+                    onClick={() => handleSelectProvince(String(p.id))}
                     className={`px-2.5 py-1 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors flex items-center gap-1 ${
                       selectedProvince === String(p.id)
                         ? 'bg-teal-600 text-white shadow-xs'
@@ -405,6 +423,39 @@ export default function HomePage() {
 
       {/* 3. LƯỚI ĐIỂM ĐẾN */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16" id="destinations-section">
+        {/* BANNER THÔNG TIN CHI TIẾT TỈNH THÀNH (GET /api/Provinces/{id}) */}
+        {provinceDetail && (
+          <div className="mb-8 p-4 sm:p-5 bg-gradient-to-r from-teal-50 via-emerald-50 to-slate-50 rounded-2xl border border-teal-200/80 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 animate-in fade-in">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-teal-600 text-white flex items-center justify-center text-lg shadow-sm">
+                <i className="fa-solid fa-location-dot"></i>
+              </div>
+              <div>
+                <div className="text-sm font-black text-slate-900 flex items-center gap-2">
+                  <span>Khám phá: {provinceDetail.name}</span>
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-teal-600 text-white">
+                    {provinceDetail.region}
+                  </span>
+                </div>
+                <p className="text-xs text-slate-600 mt-0.5">
+                  Đang hiển thị danh sách các tọa độ du lịch hấp dẫn tại khu vực này ({provinceDetail.totalPlaces || places.length} điểm đến).
+                </p>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => {
+                setSelectedProvince('');
+                setProvinceDetail(null);
+              }}
+              className="px-3 py-1.5 rounded-xl border border-slate-300 text-slate-600 hover:bg-white text-xs font-bold transition-all self-start sm:self-auto shrink-0"
+            >
+              Xem tất cả tỉnh
+            </button>
+          </div>
+        )}
+
         <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-8 border-b border-slate-200 mb-8 gap-4">
           <div>
             <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
