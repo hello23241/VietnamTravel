@@ -9,5 +9,6 @@ public class PlaceResponseDto
     public decimal TicketPriceAvg { get; set; }
     public float RatingAvg { get; set; }
     public string ProvinceName { get; set; } = string.Empty;
+    public string Region { get; set; } = string.Empty;
     public string CategoryName { get; set; } = string.Empty;
 }

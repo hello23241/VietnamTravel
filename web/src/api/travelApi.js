@@ -78,3 +78,26 @@ export const travelApi = {
     return unwrap(res);
   },
 };
+export const adminApi = {
+  // 1. Thống kê & Biểu đồ
+  getDashboardStats: async () => unwrap(await apiClient.get('/Admin/dashboard-stats')),
+  getChartStats: async () => unwrap(await apiClient.get('/Admin/chart-stats')),
+
+  // 2. Quản lý Người dùng
+  getUsers: async (tuKhoa) => unwrap(await apiClient.get('/Admin/users', { params: { tuKhoa } })),
+  deleteUser: async (id) => unwrap(await apiClient.delete(`/Admin/users/${id}`)),
+
+  // 3. Kiểm duyệt Đánh giá
+  getAllReviews: async ({ placeId, rating, pageNumber = 1, pageSize = 15 } = {}) =>
+    unwrap(await apiClient.get('/Admin/reviews', { params: { placeId, rating, pageNumber, pageSize } })),
+  deleteReview: async (id) => unwrap(await apiClient.delete(`/Admin/reviews/${id}`)),
+
+  // 4. Quản lý Tỉnh thành & Danh mục
+  createProvince: async (data) => unwrap(await apiClient.post('/Admin/provinces', data)),
+  updateProvince: async (id, data) => unwrap(await apiClient.put(`/Admin/provinces/${id}`, data)),
+  deleteProvince: async (id) => unwrap(await apiClient.delete(`/Admin/provinces/${id}`)),
+
+  createCategory: async (data) => unwrap(await apiClient.post('/Admin/categories', data)),
+  updateCategory: async (id, data) => unwrap(await apiClient.put(`/Admin/categories/${id}`, data)),
+  deleteCategory: async (id) => unwrap(await apiClient.delete(`/Admin/categories/${id}`)),
+};
