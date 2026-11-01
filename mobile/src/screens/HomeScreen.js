@@ -59,7 +59,7 @@ export default function HomeScreen({ navigation }) {
   // Tải danh sách địa điểm khi thay đổi bộ lọc hoặc tiêu chí sắp xếp
   useEffect(() => {
     loadPlaces();
-  }, [selectedCategory, selectedProvince, selectedSort]);
+  }, [selectedRegion, selectedCategory, selectedProvince, selectedSort]);
 
   const loadCategories = async () => {
     try {
@@ -85,6 +85,7 @@ export default function HomeScreen({ navigation }) {
     try {
       setLoading(true);
       const res = await travelApi.getPlaces({
+        region: selectedRegion === 'all' ? undefined : selectedRegion,
         categoryId: selectedCategory || undefined,
         provinceId: selectedProvince || undefined,
         sortBy: selectedSort,

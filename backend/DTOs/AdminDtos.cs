@@ -58,7 +58,8 @@ public class AdminReviewDto
     public int PlaceId { get; set; }
     public string PlaceName { get; set; } = string.Empty;
     public int UserId { get; set; }
-    public string UserName { get; set; } = string.Empty;
+    public string Username { get; set; } = string.Empty;
+    public string UserFullname { get; set; } = string.Empty;
     public int Rating { get; set; }
     public string? Comment { get; set; }
     public DateTime CreatedAt { get; set; }

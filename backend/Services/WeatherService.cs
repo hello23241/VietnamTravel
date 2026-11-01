@@ -19,7 +19,9 @@ public class WeatherService : IWeatherService
         var apiKey = _configuration["OpenWeatherMap:ApiKey"];
 
         // Nếu có API key hợp lệ thì gọi trực tiếp OpenWeatherMap API
-        if (!string.IsNullOrWhiteSpace(apiKey) && apiKey != "YOUR_API_KEY_HERE")
+        if (!string.IsNullOrWhiteSpace(apiKey) && 
+        apiKey != "YOUR_API_KEY_HERE" && 
+        apiKey != "YOUR_OPENWEATHERMAP_API_KEY_HERE")
         {
             try
             {

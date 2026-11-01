@@ -27,6 +27,7 @@ public class PlacesController : ControllerBase
     public async Task<ActionResult<PagedResult<PlaceResponseDto>>> GetPlaces(
         [FromQuery] int? provinceId,
         [FromQuery] int? categoryId,
+        [FromQuery] string? region,
         [FromQuery] string? tuKhoa,
         [FromQuery] string? sortBy,
         [FromQuery] int pageNumber = 1,
@@ -43,6 +44,12 @@ public class PlacesController : ControllerBase
 
         if (categoryId.HasValue)
             query = query.Where(p => p.CategoryId == categoryId.Value);
+
+        if (!string.IsNullOrWhiteSpace(region) && region.ToLower() != "all")
+        {
+            var reg = region.Trim().ToLower();
+            query = query.Where(p => p.Province != null && p.Province.Region.ToLower() == reg);
+        }
 
         if (!string.IsNullOrWhiteSpace(tuKhoa))
         {
@@ -62,17 +69,23 @@ public class PlacesController : ControllerBase
             _ => query.OrderBy(p => p.Id)
         };
 
-        // 3. Phân trang (Paging) & Ánh xạ DTO
+        // 3. Phân trang & Ánh xạ DTO
         var items = await query
             .Skip((pageNumber - 1) * pageSize)
             .Take(pageSize)
             .Select(p => new PlaceResponseDto
             {
                 Id = p.Id,
+                ProvinceId = p.ProvinceId,
+                CategoryId = p.CategoryId,
                 Name = p.Name,
+                Description = p.Description,
                 Address = p.Address,
                 ImageUrl = p.ImageUrl,
+                Latitude = p.Latitude,
+                Longitude = p.Longitude,
                 TicketPriceAvg = p.TicketPriceAvg,
+                BookingUrl = p.BookingUrl,
                 RatingAvg = p.RatingAvg,
                 ProvinceName = p.Province != null ? p.Province.Name : string.Empty,
                 Region = p.Province != null ? p.Province.Region : string.Empty,

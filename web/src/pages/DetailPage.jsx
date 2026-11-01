@@ -528,9 +528,14 @@ export default function DetailPage() {
                     </div>
                     <div className="flex items-center gap-2">
                       <i className="fa-solid fa-wind text-teal-200"></i>
-                      <span>Gió: <strong>3.5 m/s</strong></span>
+                      <span>Gió: <strong>{weather.windSpeed ?? 3.2} m/s</strong></span>
                     </div>
                   </div>
+                  {weather.recommendation && (
+                    <p className="mt-3 pt-3 border-t border-white/15 text-xs text-teal-50 italic leading-relaxed">
+                      💡 {weather.recommendation}
+                    </p>
+                  )}
                 </div>
               ) : (
                 <div className="text-xs text-teal-100 py-3 flex items-center gap-2">

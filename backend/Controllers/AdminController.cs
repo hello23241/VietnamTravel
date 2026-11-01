@@ -188,7 +188,8 @@ public class AdminController : ControllerBase
                 PlaceId = r.PlaceId,
                 PlaceName = r.Place != null ? r.Place.Name : "Địa điểm đã xóa",
                 UserId = r.UserId,
-                UserName = r.User != null ? r.User.Fullname : "Ẩn danh",
+                Username = r.User != null ? r.User.Username : "ẩn_danh",
+                UserFullname = r.User != null ? r.User.Fullname : "Ẩn danh",
                 Rating = r.Rating,
                 Comment = r.Comment,
                 CreatedAt = r.CreatedAt

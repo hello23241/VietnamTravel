@@ -29,9 +29,17 @@ export const travelApi = {
   },
 
   // 4. Danh sách Địa điểm (Places)
-  getPlaces: async ({ categoryId, provinceId, sortBy, tuKhoa, page = 1, pageSize = 50 } = {}) => {
+  getPlaces: async ({ region, categoryId, provinceId, sortBy, tuKhoa, pageNumber = 1, pageSize = 50 } = {}) => {
     const res = await apiClient.get('/Places', {
-      params: { categoryId, provinceId, sortBy, tuKhoa, page, pageSize },
+      params: {
+        region: region && region !== 'all' ? region : undefined,
+        categoryId,
+        provinceId,
+        sortBy,
+        tuKhoa,
+        pageNumber,
+        pageSize,
+      },
     });
     return unwrap(res);
   },
@@ -83,16 +91,21 @@ export const adminApi = {
   getDashboardStats: async () => unwrap(await apiClient.get('/Admin/dashboard-stats')),
   getChartStats: async () => unwrap(await apiClient.get('/Admin/chart-stats')),
 
-  // 2. Quản lý Người dùng
+  // 2. Quản lý Địa điểm (Places CRUD)
+  createPlace: async (data) => unwrap(await apiClient.post('/Places', data)),
+  updatePlace: async (id, data) => unwrap(await apiClient.put(`/Places/${id}`, data)),
+  deletePlace: async (id) => unwrap(await apiClient.delete(`/Places/${id}`)),
+
+  // 3. Quản lý Người dùng
   getUsers: async (tuKhoa) => unwrap(await apiClient.get('/Admin/users', { params: { tuKhoa } })),
   deleteUser: async (id) => unwrap(await apiClient.delete(`/Admin/users/${id}`)),
 
-  // 3. Kiểm duyệt Đánh giá
-  getAllReviews: async ({ placeId, rating, pageNumber = 1, pageSize = 15 } = {}) =>
+  // 4. Kiểm duyệt Đánh giá
+  getAllReviews: async ({ placeId, rating, pageNumber = 1, pageSize = 20 } = {}) =>
     unwrap(await apiClient.get('/Admin/reviews', { params: { placeId, rating, pageNumber, pageSize } })),
   deleteReview: async (id) => unwrap(await apiClient.delete(`/Admin/reviews/${id}`)),
 
-  // 4. Quản lý Tỉnh thành & Danh mục
+  // 5. Quản lý Tỉnh thành & Danh mục
   createProvince: async (data) => unwrap(await apiClient.post('/Admin/provinces', data)),
   updateProvince: async (id, data) => unwrap(await apiClient.put(`/Admin/provinces/${id}`, data)),
   deleteProvince: async (id) => unwrap(await apiClient.delete(`/Admin/provinces/${id}`)),
