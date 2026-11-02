@@ -199,7 +199,7 @@ export default function DetailPage() {
           </div>
         </div>
 
-        {/* 3. THANH THÔNG SỐ NHANH BỎ TÚI (QUICK SPECS - HẾT TRẮNG TRỐNG) */}
+        {/* 3. THANH THÔNG SỐ NHANH BỎ TÚI (QUICK SPECS) */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-6">
           <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm flex items-center gap-3.5">
             <div className="w-11 h-11 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-lg shrink-0">
@@ -242,7 +242,7 @@ export default function DetailPage() {
           </div>
         </div>
 
-        {/* 4. NỘI DUNG CHÍNH (2 CỘT: TRÁI ĐẬM ĐÀ, PHẢI TIỆN ÍCH) */}
+        {/* 4. NỘI DUNG CHÍNH (2 CỘT) */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mt-8">
           {/* CỘT TRÁI (8 CỘT): MÔ TẢ, LỊCH TRÌNH, ẨM THỰC, MẸO, ĐÁNH GIÁ */}
           <div className="lg:col-span-8 space-y-8">
@@ -560,11 +560,9 @@ export default function DetailPage() {
                 </div>
               </div>
 
+              {/* Nút mở bản đồ: Tìm kiếm theo Tên địa danh + Địa chỉ để hiển thị trọn vẹn hồ sơ, ảnh chụp và đánh giá như Hình 1 */}
               <a
-                href={
-                  place.mapUrl ||
-                  `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(place.name + ' ' + place.address)}`
-                }
+                href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(place.name + ' ' + (place.address || ''))}`}
                 target="_blank"
                 rel="noreferrer"
                 className="w-full py-3 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-xl transition flex items-center justify-center gap-2 shadow-sm"

@@ -27,8 +27,12 @@ export const travelApi = {
     });
     return unwrap(res);
   },
+  getProvinceDetail: async (id) => {
+    const res = await apiClient.get(`/Provinces/${id}`);
+    return unwrap(res);
+  },
 
-  // 4. Danh sách Địa điểm (Places)
+  // 4. Danh sách & Quản lý Địa điểm (Places CRUD)
   getPlaces: async ({ region, categoryId, provinceId, sortBy, tuKhoa, pageNumber = 1, pageSize = 50 } = {}) => {
     const res = await apiClient.get('/Places', {
       params: {
@@ -51,6 +55,9 @@ export const travelApi = {
     const res = await apiClient.get(`/Places/${id}/weather`);
     return unwrap(res);
   },
+  createPlace: async (data) => unwrap(await apiClient.post('/Places', data)),
+  updatePlace: async (id, data) => unwrap(await apiClient.put(`/Places/${id}`, data)),
+  deletePlace: async (id) => unwrap(await apiClient.delete(`/Places/${id}`)),
 
   // 5. Đánh giá (Reviews)
   getReviews: async (placeId) => {
@@ -86,6 +93,7 @@ export const travelApi = {
     return unwrap(res);
   },
 };
+
 export const adminApi = {
   // 1. Thống kê & Biểu đồ
   getDashboardStats: async () => unwrap(await apiClient.get('/Admin/dashboard-stats')),
