@@ -518,7 +518,7 @@ export default function DetailPage() {
                     <span className="text-4xl sm:text-5xl font-black tracking-tight">
                       {Math.round(weather.temperature)}°C
                     </span>
-                    <span className="text-xs font-bold capitalize text-teal-100">{weather.description}</span>
+                    <span className="text-xs font-bold capitalize text-teal-100">{weather.condition || weather.description}</span>
                   </div>
 
                   <div className="grid grid-cols-2 gap-3 mt-5 pt-4 border-t border-white/20 text-xs text-teal-50">
@@ -528,9 +528,14 @@ export default function DetailPage() {
                     </div>
                     <div className="flex items-center gap-2">
                       <i className="fa-solid fa-wind text-teal-200"></i>
-                      <span>Gió: <strong>3.5 m/s</strong></span>
+                      <span>Gió: <strong>{weather.windSpeed ?? 3.2} m/s</strong></span>
                     </div>
                   </div>
+                  {weather.recommendation && (
+                    <p className="mt-3 pt-3 border-t border-white/15 text-xs text-teal-50 italic leading-relaxed">
+                      💡 {weather.recommendation}
+                    </p>
+                  )}
                 </div>
               ) : (
                 <div className="text-xs text-teal-100 py-3 flex items-center gap-2">

@@ -5,6 +5,7 @@ public class PlaceDetailResponseDto
     public int Id { get; set; }
     public int ProvinceId { get; set; }
     public string ProvinceName { get; set; } = string.Empty;
+    public string Region { get; set; } = string.Empty;
     public int CategoryId { get; set; }
     public string CategoryName { get; set; } = string.Empty;
     public string Name { get; set; } = string.Empty;

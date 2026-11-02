@@ -1,10 +1,15 @@
+using System.Text.Json.Serialization;
 using Microsoft.EntityFrameworkCore;
 using TravelGuide.Api.Data;
 using TravelGuide.Api.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
+    });
 builder.Services.AddEndpointsApiExplorer();
 
 // Cấu hình Swagger đọc tài liệu XML
@@ -44,5 +49,12 @@ app.UseCors("AllowAll");
 //app.UseHttpsRedirection();
 app.UseAuthorization();
 app.MapControllers();
+
+using (var scope = app.Services.CreateScope())
+{
+    var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    context.Database.Migrate();
+    DbInitializer.SeedUsersAndReviews(context);
+}
 
 app.Run();
