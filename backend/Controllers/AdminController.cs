@@ -17,13 +17,6 @@ public class AdminController : ControllerBase
         _context = context;
     }
 
-    // =========================================================================
-    // 1. NHÓM THỐNG KÊ & BIỂU ĐỒ (DASHBOARD & CHARTS)
-    // =========================================================================
-
-    /// <summary>
-    /// Thống kê các chỉ số tổng quan (Số Place, Review, User, Tỉnh thành, Điểm TB).
-    /// </summary>
     [HttpGet("dashboard-stats")]
     public async Task<ActionResult<DashboardStatsDto>> GetDashboardStats()
     {
@@ -46,13 +39,9 @@ public class AdminController : ControllerBase
         });
     }
 
-    /// <summary>
-    /// Dữ liệu vẽ biểu đồ: Tỷ lệ địa điểm theo miền, phân bổ điểm sao, Top điểm đến yêu thích.
-    /// </summary>
     [HttpGet("chart-stats")]
     public async Task<ActionResult<DashboardChartsDto>> GetChartStats()
     {
-        // 1. Phân bổ địa điểm theo Vùng miền
         var placesByRegion = await _context.Places
             .Include(p => p.Province)
             .GroupBy(p => p.Province != null ? p.Province.Region : "Khác")
@@ -63,7 +52,6 @@ public class AdminController : ControllerBase
             })
             .ToListAsync();
 
-        // 2. Phân bổ điểm đánh giá (1 -> 5 sao)
         var ratingCounts = await _context.Reviews
             .GroupBy(r => r.Rating)
             .Select(g => new { Rating = g.Key, Count = g.Count() })
@@ -75,7 +63,6 @@ public class AdminController : ControllerBase
             ratingDistribution[star] = ratingCounts.GetValueOrDefault(star, 0);
         }
 
-        // 3. Top 5 địa điểm có nhiều lượt thả tim nhất
         var topFavorited = await _context.Places
             .AsNoTracking()
             .Select(p => new TopPlaceDto
@@ -97,25 +84,11 @@ public class AdminController : ControllerBase
         });
     }
 
-    // =========================================================================
-    // 2. NHÓM QUẢN LÝ NGƯỜI DÙNG (USER MANAGEMENT)
-    // =========================================================================
-
-    /// <summary>
-    /// Lấy danh sách thành viên trong hệ thống kèm số lượng review và yêu thích.
-    /// </summary>
     [HttpGet("users")]
     public async Task<ActionResult<IEnumerable<AdminUserDto>>> GetUsers([FromQuery] string? tuKhoa)
     {
-        var query = _context.Users.AsNoTracking().AsQueryable();
-
-        if (!string.IsNullOrWhiteSpace(tuKhoa))
-        {
-            var kw = tuKhoa.Trim().ToLower();
-            query = query.Where(u => u.Username.ToLower().Contains(kw) || u.Fullname.ToLower().Contains(kw));
-        }
-
-        var users = await query
+        var users = await _context.Users
+            .AsNoTracking()
             .OrderByDescending(u => u.CreatedAt)
             .Select(u => new AdminUserDto
             {
@@ -129,12 +102,19 @@ public class AdminController : ControllerBase
             })
             .ToListAsync();
 
+        if (!string.IsNullOrWhiteSpace(tuKhoa))
+        {
+            var kw = tuKhoa.Trim();
+            users = users
+                .Where(u =>
+                    u.Username.Contains(kw, StringComparison.OrdinalIgnoreCase) ||
+                    u.Fullname.Contains(kw, StringComparison.OrdinalIgnoreCase))
+                .ToList();
+        }
+
         return Ok(users);
     }
 
-    /// <summary>
-    /// Xóa tài khoản người dùng vi phạm (Chặn xóa tài khoản admin mặc định).
-    /// </summary>
     [HttpDelete("users/{id}")]
     public async Task<IActionResult> DeleteUser(int id)
     {
@@ -142,7 +122,7 @@ public class AdminController : ControllerBase
         if (user == null)
             return NotFound(new { message = $"Không tìm thấy người dùng với mã {id}" });
 
-        if (user.Username.ToLower() == "admin")
+        if (user.Username.Equals("admin", StringComparison.OrdinalIgnoreCase))
             return BadRequest(new { message = "Không được phép xóa tài khoản Quản trị viên tối cao (admin)" });
 
         _context.Users.Remove(user);
@@ -151,13 +131,6 @@ public class AdminController : ControllerBase
         return Ok(new { message = $"Đã xóa người dùng '{user.Username}' thành công" });
     }
 
-    // =========================================================================
-    // 3. NHÓM KIỂM DUYỆT ĐÁNH GIÁ (REVIEWS MODERATION)
-    // =========================================================================
-
-    /// <summary>
-    /// Lấy danh sách đánh giá có bộ lọc theo số sao hoặc ID địa điểm để phát hiện bài spam.
-    /// </summary>
     [HttpGet("reviews")]
     public async Task<ActionResult<PagedResult<AdminReviewDto>>> GetAllReviews(
         [FromQuery] int? placeId,
@@ -166,7 +139,7 @@ public class AdminController : ControllerBase
         [FromQuery] int pageSize = 15)
     {
         pageNumber = Math.Max(1, pageNumber);
-        pageSize = Math.Clamp(pageSize, 1, 50);
+        pageSize = Math.Clamp(pageSize, 1, 100);
 
         var query = _context.Reviews.AsNoTracking().AsQueryable();
 
@@ -205,9 +178,6 @@ public class AdminController : ControllerBase
         });
     }
 
-    /// <summary>
-    /// Xóa một đánh giá vi phạm và tự động tính lại điểm trung bình cho địa điểm.
-    /// </summary>
     [HttpDelete("reviews/{id}")]
     public async Task<IActionResult> DeleteReview(int id)
     {
@@ -216,11 +186,8 @@ public class AdminController : ControllerBase
             return NotFound(new { message = "Không tìm thấy đánh giá cần xóa" });
 
         var placeId = review.PlaceId;
-        _context.Reviews.Remove(review);
-        await _context.SaveChangesAsync();
-
         var remainingReviews = await _context.Reviews
-            .Where(r => r.PlaceId == placeId)
+            .Where(r => r.PlaceId == placeId && r.Id != id)
             .Select(r => r.Rating)
             .ToListAsync();
 
@@ -230,15 +197,13 @@ public class AdminController : ControllerBase
             place.RatingAvg = remainingReviews.Count > 0
                 ? (float)Math.Round(remainingReviews.Average(), 1)
                 : 5.0f;
-            await _context.SaveChangesAsync();
         }
+
+        _context.Reviews.Remove(review);
+        await _context.SaveChangesAsync();
 
         return Ok(new { message = "Đã xóa đánh giá vi phạm thành công" });
     }
-
-    // =========================================================================
-    // 4. NHÓM QUẢN LÝ TỈNH THÀNH (PROVINCES MANAGEMENT)
-    // =========================================================================
 
     [HttpPost("provinces")]
     public async Task<IActionResult> CreateProvince([FromBody] SaveProvinceDto dto)
@@ -253,13 +218,22 @@ public class AdminController : ControllerBase
         _context.Provinces.Add(province);
         await _context.SaveChangesAsync();
 
-        return Ok(new { message = "Thêm tỉnh/thành mới thành công", province });
+        var responseDto = new ProvinceResponseDto
+        {
+            Id = province.Id,
+            Name = province.Name,
+            Region = province.Region,
+            BannerUrl = province.BannerUrl,
+            TotalPlaces = 0
+        };
+
+        return StatusCode(StatusCodes.Status201Created, new { message = "Thêm tỉnh/thành mới thành công", province = responseDto });
     }
 
     [HttpPut("provinces/{id}")]
     public async Task<IActionResult> UpdateProvince(int id, [FromBody] SaveProvinceDto dto)
     {
-        var province = await _context.Provinces.FindAsync(id);
+        var province = await _context.Provinces.Include(p => p.Places).FirstOrDefaultAsync(p => p.Id == id);
         if (province == null)
             return NotFound(new { message = $"Không tìm thấy tỉnh/thành với mã {id}" });
 
@@ -268,7 +242,17 @@ public class AdminController : ControllerBase
         province.BannerUrl = dto.BannerUrl?.Trim();
 
         await _context.SaveChangesAsync();
-        return Ok(new { message = "Cập nhật thông tin tỉnh/thành thành công", province });
+
+        var responseDto = new ProvinceResponseDto
+        {
+            Id = province.Id,
+            Name = province.Name,
+            Region = province.Region,
+            BannerUrl = province.BannerUrl,
+            TotalPlaces = province.Places.Count
+        };
+
+        return Ok(new { message = "Cập nhật thông tin tỉnh/thành thành công", province = responseDto });
     }
 
     [HttpDelete("provinces/{id}")]
@@ -287,10 +271,6 @@ public class AdminController : ControllerBase
         return Ok(new { message = "Đã xóa tỉnh/thành thành công" });
     }
 
-    // =========================================================================
-    // 5. NHÓM QUẢN LÝ THỂ LOẠI / DANH MỤC (CATEGORIES MANAGEMENT)
-    // =========================================================================
-
     [HttpPost("categories")]
     public async Task<IActionResult> CreateCategory([FromBody] SaveCategoryDto dto)
     {
@@ -303,7 +283,14 @@ public class AdminController : ControllerBase
         _context.Categories.Add(category);
         await _context.SaveChangesAsync();
 
-        return Ok(new { message = "Thêm danh mục mới thành công", category });
+        var responseDto = new CategoryResponseDto
+        {
+            Id = category.Id,
+            Name = category.Name,
+            IconUrl = category.IconUrl
+        };
+
+        return StatusCode(StatusCodes.Status201Created, new { message = "Thêm danh mục mới thành công", category = responseDto });
     }
 
     [HttpPut("categories/{id}")]
@@ -317,7 +304,15 @@ public class AdminController : ControllerBase
         category.IconUrl = dto.IconUrl?.Trim();
 
         await _context.SaveChangesAsync();
-        return Ok(new { message = "Cập nhật danh mục thành công", category });
+
+        var responseDto = new CategoryResponseDto
+        {
+            Id = category.Id,
+            Name = category.Name,
+            IconUrl = category.IconUrl
+        };
+
+        return Ok(new { message = "Cập nhật danh mục thành công", category = responseDto });
     }
 
     [HttpDelete("categories/{id}")]

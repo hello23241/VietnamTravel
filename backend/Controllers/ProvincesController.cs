@@ -16,21 +16,11 @@ public class ProvincesController : ControllerBase
         _context = context;
     }
 
-    /// <summary>
-    /// Lấy danh sách tất cả các tỉnh/thành phố, có thể lọc theo miền (Bắc, Trung, Nam).
-    /// </summary>
     [HttpGet]
     public async Task<ActionResult<IEnumerable<ProvinceResponseDto>>> GetProvinces([FromQuery] string? region)
     {
-        var query = _context.Provinces.AsNoTracking().AsQueryable();
-
-        if (!string.IsNullOrWhiteSpace(region))
-        {
-            var regionLower = region.Trim().ToLower();
-            query = query.Where(p => p.Region.ToLower() == regionLower);
-        }
-
-        var results = await query
+        var results = await _context.Provinces
+            .AsNoTracking()
             .OrderBy(p => p.Id)
             .Select(p => new ProvinceResponseDto
             {
@@ -42,12 +32,17 @@ public class ProvincesController : ControllerBase
             })
             .ToListAsync();
 
+        if (!string.IsNullOrWhiteSpace(region) && !region.Trim().Equals("all", StringComparison.OrdinalIgnoreCase))
+        {
+            var reg = region.Trim();
+            results = results
+                .Where(p => p.Region.Equals(reg, StringComparison.OrdinalIgnoreCase))
+                .ToList();
+        }
+
         return Ok(results);
     }
 
-    /// <summary>
-    /// Lấy chi tiết thông tin của một tỉnh/thành phố theo Id.
-    /// </summary>
     [HttpGet("{id}")]
     public async Task<ActionResult<ProvinceResponseDto>> GetProvinceById(int id)
     {

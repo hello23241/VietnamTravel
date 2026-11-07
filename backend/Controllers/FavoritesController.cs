@@ -17,9 +17,6 @@ public class FavoritesController : ControllerBase
         _context = context;
     }
 
-    /// <summary>
-    /// Bật hoặc tắt trạng thái lưu yêu thích một địa điểm (Toggle Favorite).
-    /// </summary>
     [HttpPost("toggle")]
     public async Task<IActionResult> ToggleFavorite([FromBody] FavoriteToggleDto dto)
     {
@@ -36,14 +33,12 @@ public class FavoritesController : ControllerBase
 
         if (favorite != null)
         {
-            // Nếu đã thích -> Bỏ thích
             _context.Favorites.Remove(favorite);
             await _context.SaveChangesAsync();
             return Ok(new { isFavorite = false, message = "Đã bỏ lưu địa điểm khỏi sổ tay yêu thích" });
         }
         else
         {
-            // Chưa thích -> Thêm vào yêu thích
             _context.Favorites.Add(new Favorite
             {
                 UserId = dto.UserId,
@@ -55,9 +50,6 @@ public class FavoritesController : ControllerBase
         }
     }
 
-    /// <summary>
-    /// Lấy danh sách tất cả các địa điểm mà một người dùng đã lưu vào sổ tay yêu thích.
-    /// </summary>
     [HttpGet("user/{userId}")]
     public async Task<ActionResult<IEnumerable<PlaceResponseDto>>> GetUserFavorites(int userId)
     {
@@ -67,17 +59,24 @@ public class FavoritesController : ControllerBase
 
         var favoritePlaces = await _context.Favorites
             .AsNoTracking()
-            .Where(f => f.UserId == userId)
+            .Where(f => f.UserId == userId && f.Place != null)
             .OrderByDescending(f => f.CreatedAt)
             .Select(f => new PlaceResponseDto
             {
                 Id = f.Place!.Id,
+                ProvinceId = f.Place.ProvinceId,
+                CategoryId = f.Place.CategoryId,
                 Name = f.Place.Name,
+                Description = f.Place.Description,
                 Address = f.Place.Address,
                 ImageUrl = f.Place.ImageUrl,
+                Latitude = f.Place.Latitude,
+                Longitude = f.Place.Longitude,
                 TicketPriceAvg = f.Place.TicketPriceAvg,
+                BookingUrl = f.Place.BookingUrl,
                 RatingAvg = f.Place.RatingAvg,
                 ProvinceName = f.Place.Province != null ? f.Place.Province.Name : string.Empty,
+                Region = f.Place.Province != null ? f.Place.Province.Region : string.Empty,
                 CategoryName = f.Place.Category != null ? f.Place.Category.Name : string.Empty
             })
             .ToListAsync();

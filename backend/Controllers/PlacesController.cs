@@ -20,9 +20,6 @@ public class PlacesController : ControllerBase
         _weatherService = weatherService;
     }
 
-    /// <summary>
-    /// READ (List): Lấy danh sách địa điểm có lọc theo tỉnh, danh mục, từ khóa, sắp xếp và phân trang.
-    /// </summary>
     [HttpGet]
     public async Task<ActionResult<PagedResult<PlaceResponseDto>>> GetPlaces(
         [FromQuery] int? provinceId,
@@ -33,46 +30,18 @@ public class PlacesController : ControllerBase
         [FromQuery] int pageNumber = 1,
         [FromQuery] int pageSize = 10)
     {
-        pageSize = Math.Clamp(pageSize, 1, 50);
+        pageSize = Math.Clamp(pageSize, 1, 100);
         pageNumber = Math.Max(1, pageNumber);
 
         var query = _context.Places.AsNoTracking().AsQueryable();
 
-        // 1. Lọc (Filter)
         if (provinceId.HasValue)
             query = query.Where(p => p.ProvinceId == provinceId.Value);
 
         if (categoryId.HasValue)
             query = query.Where(p => p.CategoryId == categoryId.Value);
 
-        if (!string.IsNullOrWhiteSpace(region) && region.ToLower() != "all")
-        {
-            var reg = region.Trim().ToLower();
-            query = query.Where(p => p.Province != null && p.Province.Region.ToLower() == reg);
-        }
-
-        if (!string.IsNullOrWhiteSpace(tuKhoa))
-        {
-            var kw = tuKhoa.Trim().ToLower();
-            query = query.Where(p => p.Name.ToLower().Contains(kw) || p.Address.ToLower().Contains(kw));
-        }
-
-        var totalItems = await query.CountAsync();
-
-        // 2. Sắp xếp (Sort)
-        query = sortBy?.ToLower() switch
-        {
-            "gia" or "giatang" => query.OrderBy(p => p.TicketPriceAvg),
-            "giagiam" => query.OrderByDescending(p => p.TicketPriceAvg),
-            "danhgia" or "rating" => query.OrderByDescending(p => p.RatingAvg),
-            "ten" => query.OrderBy(p => p.Name),
-            _ => query.OrderBy(p => p.Id)
-        };
-
-        // 3. Phân trang & Ánh xạ DTO
-        var items = await query
-            .Skip((pageNumber - 1) * pageSize)
-            .Take(pageSize)
+        var projectedList = await query
             .Select(p => new PlaceResponseDto
             {
                 Id = p.Id,
@@ -93,6 +62,40 @@ public class PlacesController : ControllerBase
             })
             .ToListAsync();
 
+        IEnumerable<PlaceResponseDto> filtered = projectedList;
+
+        if (!string.IsNullOrWhiteSpace(region) && !region.Trim().Equals("all", StringComparison.OrdinalIgnoreCase))
+        {
+            var reg = region.Trim();
+            filtered = filtered.Where(p => p.Region.Equals(reg, StringComparison.OrdinalIgnoreCase));
+        }
+
+        if (!string.IsNullOrWhiteSpace(tuKhoa))
+        {
+            var kw = tuKhoa.Trim();
+            filtered = filtered.Where(p =>
+                p.Name.Contains(kw, StringComparison.OrdinalIgnoreCase) ||
+                p.Address.Contains(kw, StringComparison.OrdinalIgnoreCase) ||
+                p.ProvinceName.Contains(kw, StringComparison.OrdinalIgnoreCase));
+        }
+
+        filtered = sortBy?.ToLower() switch
+        {
+            "gia" or "giatang" => filtered.OrderBy(p => p.TicketPriceAvg).ThenBy(p => p.Id),
+            "giagiam" => filtered.OrderByDescending(p => p.TicketPriceAvg).ThenBy(p => p.Id),
+            "danhgia" or "rating" => filtered.OrderByDescending(p => p.RatingAvg).ThenBy(p => p.Id),
+            "ten" => filtered.OrderBy(p => p.Name).ThenBy(p => p.Id),
+            _ => filtered.OrderBy(p => p.Id)
+        };
+
+        var finalList = filtered.ToList();
+        var totalItems = finalList.Count;
+
+        var items = finalList
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
+            .ToList();
+
         return Ok(new PagedResult<PlaceResponseDto>
         {
             Items = items,
@@ -102,9 +105,6 @@ public class PlacesController : ControllerBase
         });
     }
 
-    /// <summary>
-    /// READ (Detail): Lấy thông tin chi tiết một địa điểm theo Id kèm tọa độ GPS.
-    /// </summary>
     [HttpGet("{id}", Name = "GetPlaceById")]
     public async Task<ActionResult<PlaceDetailResponseDto>> GetPlaceById(int id)
     {
@@ -138,13 +138,9 @@ public class PlacesController : ControllerBase
         return Ok(place);
     }
 
-    /// <summary>
-    /// CREATE: Thêm mới một địa điểm du lịch (Dành cho Quản trị viên).
-    /// </summary>
     [HttpPost]
     public async Task<ActionResult<PlaceDetailResponseDto>> CreatePlace([FromBody] PlaceCreateDto dto)
     {
-        // 1. Kiểm tra tồn tại khóa ngoại
         var province = await _context.Provinces.FindAsync(dto.ProvinceId);
         if (province == null)
             return BadRequest(new { message = $"Tỉnh/thành với mã {dto.ProvinceId} không tồn tại" });
@@ -153,7 +149,6 @@ public class PlacesController : ControllerBase
         if (category == null)
             return BadRequest(new { message = $"Danh mục với mã {dto.CategoryId} không tồn tại" });
 
-        // 2. Tạo Entity mới
         var place = new Place
         {
             ProvinceId = dto.ProvinceId,
@@ -161,20 +156,19 @@ public class PlacesController : ControllerBase
             Name = dto.Name.Trim(),
             Description = dto.Description.Trim(),
             Address = dto.Address.Trim(),
-            ImageUrl = string.IsNullOrWhiteSpace(dto.ImageUrl) 
-                ? "https://images.unsplash.com/photo-1528127269322-539801943592" 
+            ImageUrl = string.IsNullOrWhiteSpace(dto.ImageUrl)
+                ? "https://images.unsplash.com/photo-1528127269322-539801943592"
                 : dto.ImageUrl.Trim(),
             Latitude = dto.Latitude,
             Longitude = dto.Longitude,
             TicketPriceAvg = dto.TicketPriceAvg,
-            BookingUrl = dto.BookingUrl,
+            BookingUrl = string.IsNullOrWhiteSpace(dto.BookingUrl) ? null : dto.BookingUrl.Trim(),
             RatingAvg = 5.0f
         };
 
         _context.Places.Add(place);
         await _context.SaveChangesAsync();
 
-        // 3. Trả về HTTP 201 kèm đầy đủ thông tin Tỉnh thành và Danh mục
         var responseDto = new PlaceDetailResponseDto
         {
             Id = place.Id,
@@ -198,9 +192,6 @@ public class PlacesController : ControllerBase
         return CreatedAtAction(nameof(GetPlaceById), new { id = place.Id }, responseDto);
     }
 
-    /// <summary>
-    /// UPDATE: Cập nhật thông tin địa điểm theo Id.
-    /// </summary>
     [HttpPut("{id}")]
     public async Task<IActionResult> UpdatePlace(int id, [FromBody] PlaceCreateDto dto)
     {
@@ -225,15 +216,16 @@ public class PlacesController : ControllerBase
         place.Latitude = dto.Latitude;
         place.Longitude = dto.Longitude;
         place.TicketPriceAvg = dto.TicketPriceAvg;
-        place.BookingUrl = dto.BookingUrl;
+
+        if (dto.BookingUrl != null)
+        {
+            place.BookingUrl = string.IsNullOrWhiteSpace(dto.BookingUrl) ? null : dto.BookingUrl.Trim();
+        }
 
         await _context.SaveChangesAsync();
         return Ok(new { message = "Cập nhật địa điểm thành công" });
     }
 
-    /// <summary>
-    /// DELETE: Xóa một địa điểm theo Id (Cascade tự động xóa Đánh giá và Yêu thích liên quan).
-    /// </summary>
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeletePlace(int id)
     {
@@ -244,12 +236,9 @@ public class PlacesController : ControllerBase
         _context.Places.Remove(place);
         await _context.SaveChangesAsync();
 
-        return NoContent(); // HTTP 204
+        return NoContent();
     }
 
-    /// <summary>
-    /// WEATHER: Lấy dự báo thời tiết thời gian thực và khuyến nghị du lịch tại địa điểm.
-    /// </summary>
     [HttpGet("{id}/weather")]
     public async Task<ActionResult<WeatherResponseDto>> GetPlaceWeather(int id)
     {

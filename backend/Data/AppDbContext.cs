@@ -21,7 +21,6 @@ public class AppDbContext : DbContext
     {
         base.OnModelCreating(modelBuilder);
 
-        // Khóa chính tổ hợp cho bảng trung gian Favorite
         modelBuilder.Entity<Favorite>()
             .HasKey(f => new { f.UserId, f.PlaceId });
 
@@ -37,7 +36,6 @@ public class AppDbContext : DbContext
             .HasForeignKey(f => f.PlaceId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        // Ràng buộc xóa Place sẽ xóa luôn các Review liên quan
         modelBuilder.Entity<Review>()
             .HasOne(r => r.Place)
             .WithMany(p => p.Reviews)
@@ -50,21 +48,19 @@ public class AppDbContext : DbContext
             .HasForeignKey(r => r.UserId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        // Tên đăng nhập không được trùng lặp
         modelBuilder.Entity<User>()
             .HasIndex(u => u.Username)
             .IsUnique();
 
-        // Chuyển decimal sang double để SQLite hỗ trợ OrderBy theo giá mà không báo lỗi
         modelBuilder.Entity<Place>()
             .Property(p => p.TicketPriceAvg)
             .HasConversion<double>();
-            // Bổ sung dữ liệu mẫu cho Tỉnh thành và Danh mục
+
         modelBuilder.Entity<Province>().HasData(
             new Province { Id = 1, Name = "Đà Nẵng", Region = "Trung", BannerUrl = "https://example.com/danang.jpg" },
             new Province { Id = 2, Name = "Hà Nội", Region = "Bắc", BannerUrl = "https://example.com/hanoi.jpg" },
             new Province { Id = 3, Name = "TP. Hồ Chí Minh", Region = "Nam", BannerUrl = "https://example.com/hcm.jpg" },
-            new Province { Id = 4, Name = "Lâm Đồng", Region = "Tây Nguyên", BannerUrl = "https://example.com/dalat.jpg" }
+            new Province { Id = 4, Name = "Lâm Đồng", Region = "Trung", BannerUrl = "https://example.com/dalat.jpg" }
         );
 
         modelBuilder.Entity<Category>().HasData(
@@ -73,12 +69,13 @@ public class AppDbContext : DbContext
             new Category { Id = 3, Name = "Di tích lịch sử", IconUrl = "monument" },
             new Category { Id = 4, Name = "Điểm Check-in / Cà phê", IconUrl = "camera" }
         );
+
         modelBuilder.Entity<Place>().HasData(
             new Place
             {
                 Id = 1,
-                ProvinceId = 1, // Đà Nẵng
-                CategoryId = 1, // Danh lam thắng cảnh
+                ProvinceId = 1,
+                CategoryId = 1,
                 Name = "Bà Nà Hills",
                 Description = "Khu du lịch trên đỉnh núi Chúa với Cầu Vàng nổi tiếng thế giới.",
                 Address = "Xã Hòa Ninh, Huyện Hòa Vang, TP. Đà Nẵng",
@@ -92,8 +89,8 @@ public class AppDbContext : DbContext
             new Place
             {
                 Id = 2,
-                ProvinceId = 2, // Hà Nội
-                CategoryId = 3, // Di tích lịch sử
+                ProvinceId = 2,
+                CategoryId = 3,
                 Name = "Hồ Hoàn Kiếm và Đền Ngọc Sơn",
                 Description = "Trái tim của thủ đô Hà Nội, gắn liền với truyền thuyết vua Lê Lợi trả gươm báu.",
                 Address = "Quận Hoàn Kiếm, TP. Hà Nội",
@@ -107,8 +104,8 @@ public class AppDbContext : DbContext
             new Place
             {
                 Id = 3,
-                ProvinceId = 3, // TP. Hồ Chí Minh
-                CategoryId = 2, // Ẩm thực & Đặc sản
+                ProvinceId = 3,
+                CategoryId = 2,
                 Name = "Chợ Bến Thành",
                 Description = "Biểu tượng giao thương lâu đời với khu ẩm thực đêm sầm uất.",
                 Address = "Phường Bến Thành, Quận 1, TP. Hồ Chí Minh",
@@ -122,8 +119,8 @@ public class AppDbContext : DbContext
             new Place
             {
                 Id = 4,
-                ProvinceId = 4, // Lâm Đồng
-                CategoryId = 4, // Điểm Check-in
+                ProvinceId = 4,
+                CategoryId = 4,
                 Name = "Quảng trường Lâm Viên",
                 Description = "Công trình kiến trúc nụ hoa Atiso và hoa Dã Quỳ khổng lồ bên hồ Xuân Hương.",
                 Address = "Đường Trần Quốc Toản, Phường 10, TP. Đà Lạt",

@@ -17,9 +17,6 @@ public class ReviewsController : ControllerBase
         _context = context;
     }
 
-    /// <summary>
-    /// Lấy danh sách tất cả đánh giá của một địa điểm du lịch cụ thể.
-    /// </summary>
     [HttpGet]
     public async Task<ActionResult<IEnumerable<ReviewResponseDto>>> GetReviewsByPlace([FromQuery] int placeId)
     {
@@ -49,13 +46,9 @@ public class ReviewsController : ControllerBase
         return Ok(reviews);
     }
 
-    /// <summary>
-    /// Gửi đánh giá sao kèm nhận xét cho địa điểm (tự động tính lại điểm trung bình của địa điểm).
-    /// </summary>
     [HttpPost]
     public async Task<ActionResult<ReviewResponseDto>> AddReview([FromBody] ReviewCreateDto dto)
     {
-        // 1. Kiểm tra User và Place có tồn tại trong hệ thống không
         var user = await _context.Users.FindAsync(dto.UserId);
         if (user == null)
             return BadRequest(new { message = $"Người dùng với mã {dto.UserId} không tồn tại" });
@@ -64,7 +57,14 @@ public class ReviewsController : ControllerBase
         if (place == null)
             return BadRequest(new { message = $"Địa điểm với mã {dto.PlaceId} không tồn tại" });
 
-        // 2. Thêm Review mới
+        var existingRatings = await _context.Reviews
+            .Where(r => r.PlaceId == dto.PlaceId)
+            .Select(r => r.Rating)
+            .ToListAsync();
+
+        existingRatings.Add(dto.Rating);
+        place.RatingAvg = (float)Math.Round(existingRatings.Average(), 1);
+
         var review = new Review
         {
             UserId = dto.UserId,
@@ -77,16 +77,6 @@ public class ReviewsController : ControllerBase
         _context.Reviews.Add(review);
         await _context.SaveChangesAsync();
 
-        // 3. Tự động tính toán lại điểm đánh giá trung bình (RatingAvg) cho Place
-        var allRatings = await _context.Reviews
-            .Where(r => r.PlaceId == dto.PlaceId)
-            .Select(r => r.Rating)
-            .ToListAsync();
-
-        place.RatingAvg = (float)Math.Round(allRatings.Average(), 1);
-        await _context.SaveChangesAsync();
-
-        // 4. Trả về kết quả HTTP 201 Created
         var responseDto = new ReviewResponseDto
         {
             Id = review.Id,
@@ -101,9 +91,7 @@ public class ReviewsController : ControllerBase
 
         return StatusCode(StatusCodes.Status201Created, responseDto);
     }
-    /// <summary>
-    /// Xóa một đánh giá vi phạm và tự động tính lại điểm trung bình cho địa điểm (Dành cho Admin).
-    /// </summary>
+
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteReview(int id)
     {
@@ -112,24 +100,22 @@ public class ReviewsController : ControllerBase
             return NotFound(new { message = $"Không tìm thấy đánh giá với mã {id}" });
 
         var placeId = review.PlaceId;
-        _context.Reviews.Remove(review);
-        await _context.SaveChangesAsync();
-
-        // Tính lại điểm trung bình cho địa điểm sau khi xóa đánh giá
         var remainingRatings = await _context.Reviews
-            .Where(r => r.PlaceId == placeId)
+            .Where(r => r.PlaceId == placeId && r.Id != id)
             .Select(r => r.Rating)
             .ToListAsync();
 
         var place = await _context.Places.FindAsync(placeId);
         if (place != null)
         {
-            place.RatingAvg = remainingRatings.Any() 
-                ? (float)Math.Round(remainingRatings.Average(), 1) 
-                : 5.0f; // Mặc định 5.0 nếu không còn đánh giá nào
-            await _context.SaveChangesAsync();
+            place.RatingAvg = remainingRatings.Count > 0
+                ? (float)Math.Round(remainingRatings.Average(), 1)
+                : 5.0f;
         }
 
-        return NoContent(); // 204
+        _context.Reviews.Remove(review);
+        await _context.SaveChangesAsync();
+
+        return NoContent();
     }
 }

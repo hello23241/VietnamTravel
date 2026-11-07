@@ -31,7 +31,7 @@ namespace TravelGuide.Api.Migrations
                     { 1, "https://example.com/danang.jpg", "Đà Nẵng", "Trung" },
                     { 2, "https://example.com/hanoi.jpg", "Hà Nội", "Bắc" },
                     { 3, "https://example.com/hcm.jpg", "TP. Hồ Chí Minh", "Nam" },
-                    { 4, "https://example.com/dalat.jpg", "Lâm Đồng", "Tây Nguyên" }
+                    { 4, "https://example.com/dalat.jpg", "Lâm Đồng","Trung" }
                 });
 
             migrationBuilder.InsertData(

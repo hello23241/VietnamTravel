@@ -1,4 +1,6 @@
+using System.Globalization;
 using System.Text.Json;
+using Microsoft.Extensions.Caching.Memory;
 using TravelGuide.Api.DTOs;
 
 namespace TravelGuide.Api.Services;
@@ -7,25 +9,37 @@ public class WeatherService : IWeatherService
 {
     private readonly HttpClient _httpClient;
     private readonly IConfiguration _configuration;
+    private readonly IMemoryCache _cache;
 
-    public WeatherService(HttpClient httpClient, IConfiguration configuration)
+    public WeatherService(HttpClient httpClient, IConfiguration configuration, IMemoryCache cache)
     {
         _httpClient = httpClient;
         _configuration = configuration;
+        _cache = cache;
     }
 
     public async Task<WeatherResponseDto> GetWeatherByCoordinatesAsync(double latitude, double longitude)
     {
+        var latKey = Math.Round(latitude, 3).ToString(CultureInfo.InvariantCulture);
+        var lonKey = Math.Round(longitude, 3).ToString(CultureInfo.InvariantCulture);
+        var cacheKey = $"weather_{latKey}_{lonKey}";
+
+        if (_cache.TryGetValue(cacheKey, out WeatherResponseDto? cachedWeather) && cachedWeather != null)
+        {
+            return cachedWeather;
+        }
+
         var apiKey = _configuration["OpenWeatherMap:ApiKey"];
 
-        // Nếu có API key hợp lệ thì gọi trực tiếp OpenWeatherMap API
-        if (!string.IsNullOrWhiteSpace(apiKey) && 
-        apiKey != "YOUR_API_KEY_HERE" && 
-        apiKey != "YOUR_OPENWEATHERMAP_API_KEY_HERE")
+        if (!string.IsNullOrWhiteSpace(apiKey) &&
+            apiKey != "YOUR_API_KEY_HERE" &&
+            apiKey != "YOUR_OPENWEATHERMAP_API_KEY_HERE")
         {
             try
             {
-                var url = $"https://api.openweathermap.org/data/2.5/weather?lat={latitude}&lon={longitude}&units=metric&lang=vi&appid={apiKey}";
+                var latStr = latitude.ToString(CultureInfo.InvariantCulture);
+                var lonStr = longitude.ToString(CultureInfo.InvariantCulture);
+                var url = $"https://api.openweathermap.org/data/2.5/weather?lat={latStr}&lon={lonStr}&units=metric&lang=vi&appid={apiKey}";
                 var response = await _httpClient.GetAsync(url);
 
                 if (response.IsSuccessStatusCode)
@@ -41,7 +55,7 @@ public class WeatherService : IWeatherService
                     var condition = weatherElem.GetProperty("description").GetString() ?? "Bình thường";
                     var iconCode = weatherElem.GetProperty("icon").GetString() ?? "01d";
 
-                    return new WeatherResponseDto
+                    var result = new WeatherResponseDto
                     {
                         Temperature = Math.Round(temp, 1),
                         Humidity = humidity,
@@ -50,16 +64,19 @@ public class WeatherService : IWeatherService
                         IconUrl = $"https://openweathermap.org/img/wn/{iconCode}@2x.png",
                         Recommendation = GenerateRecommendation(condition, temp)
                     };
+
+                    _cache.Set(cacheKey, result, TimeSpan.FromMinutes(30));
+                    return result;
                 }
             }
             catch
             {
-                // Nếu gọi OpenWeather thất bại (mạng lag/hết quota), chuyển tiếp xuống Fallback
             }
         }
 
-        // Dữ liệu mô phỏng dự phòng thông minh (Fallback) để app luôn chạy mượt mà
-        return GenerateFallbackWeather(latitude, longitude);
+        var fallback = GenerateFallbackWeather(latitude, longitude);
+        _cache.Set(cacheKey, fallback, TimeSpan.FromMinutes(10));
+        return fallback;
     }
 
     private static string GenerateRecommendation(string condition, double temp)
@@ -79,7 +96,6 @@ public class WeatherService : IWeatherService
 
     private static WeatherResponseDto GenerateFallbackWeather(double latitude, double longitude)
     {
-        // Giả lập nhiệt độ biến thiên theo vĩ độ (Miền Bắc mát hơn Miền Nam)
         var isNorth = latitude > 16.0;
         var temp = isNorth ? 24.5 : 30.2;
 

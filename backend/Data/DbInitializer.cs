@@ -6,7 +6,16 @@ public static class DbInitializer
 {
     public static void SeedUsersAndReviews(AppDbContext context)
     {
-        // 1. Seed tài khoản Admin và User mẫu nếu chưa có
+        var tayNguyenProvinces = context.Provinces.Where(p => p.Region == "Tây Nguyên").ToList();
+        if (tayNguyenProvinces.Count > 0)
+        {
+            foreach (var prov in tayNguyenProvinces)
+            {
+                prov.Region = "Trung";
+            }
+            context.SaveChanges();
+        }
+
         if (!context.Users.Any())
         {
             var adminUser = new User
@@ -31,11 +40,10 @@ public static class DbInitializer
             context.SaveChanges();
         }
 
-        // 2. Seed đánh giá mẫu để AdminPage có dữ liệu kiểm duyệt ngay lập tức
         if (!context.Reviews.Any())
         {
             var kiet = context.Users.FirstOrDefault(u => u.Username == "kietho");
-            var place = context.Places.FirstOrDefault(p => p.Id == 1); // Bà Nà Hills
+            var place = context.Places.FirstOrDefault(p => p.Id == 1);
 
             if (kiet != null && place != null)
             {
@@ -57,6 +65,7 @@ public static class DbInitializer
                         CreatedAt = DateTime.UtcNow.AddHours(-3)
                     }
                 );
+                place.RatingAvg = 3.0f;
                 context.SaveChanges();
             }
         }

@@ -1,0 +1,1030 @@
+{
+  "info": {
+    "_postman_id": "b8f9a2d1-6c4e-4a1b-9f0e-2d3c4b5a6e7f",
+    "name": "VietGuide Travel API - Full Test Suite",
+    "description": "Bộ kịch bản kiểm thử tự động toàn diện cho Backend TravelGuide.Api (.NET 8 + SQLite).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5128",
+      "type": "string"
+    },
+    {
+      "key": "testUserId",
+      "value": "2",
+      "type": "string"
+    },
+    {
+      "key": "createdPlaceId",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "createdReviewId",
+      "value": "1",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Auth (Xác thực & Tài khoản)",
+      "item": [
+        {
+          "name": "1.1 Đăng nhập Admin (Hợp lệ - 200 OK)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200 OK', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Trả về đúng username admin và không lộ PasswordHash', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.username).to.eql('admin');",
+                  "    pm.expect(jsonData).to.not.have.property('passwordHash');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"admin\",\n  \"password\": \"admin123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/Auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "Auth",
+                "login"
+              ]
+            }
+          }
+        },
+        {
+          "name": "1.2 Đăng nhập Sai mật khẩu (401 Unauthorized)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 401 Unauthorized', function () {",
+                  "    pm.response.to.have.status(401);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"admin\",\n  \"password\": \"saimatkhau123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/Auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "Auth",
+                "login"
+              ]
+            }
+          }
+        },
+        {
+          "name": "1.3 Đăng ký tài khoản mới (201 Created)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 201 Created', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData && jsonData.id) {",
+                  "    pm.collectionVariables.set('testUserId', jsonData.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"dukhach_{{$randomInt}}\",\n  \"password\": \"matkhau123\",\n  \"fullname\": \"Du Khách Thử Nghiệm\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/Auth/register",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "Auth",
+                "register"
+              ]
+            }
+          }
+        },
+        {
+          "name": "1.4 Đăng ký trùng Username 'admin' (400 Bad Request)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 400 Bad Request', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"admin\",\n  \"password\": \"password123\",\n  \"fullname\": \"Trùng Admin\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/Auth/register",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "Auth",
+                "register"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Categories & Provinces (Danh mục & Tỉnh thành)",
+      "item": [
+        {
+          "name": "2.1 Lấy tất cả Danh mục (200 OK)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200 OK', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Danh sách danh mục không rỗng', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.length).to.be.above(0);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/Categories",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "Categories"
+              ]
+            }
+          }
+        },
+        {
+          "name": "2.2 Lấy danh sách Tỉnh thành theo miền Trung (200 OK)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200 OK', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Có chứa Đà Nẵng và Lâm Đồng (đã đồng bộ về miền Trung)', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    var names = jsonData.map(p => p.name);",
+                  "    pm.expect(names).to.include('Đà Nẵng');",
+                  "    pm.expect(names).to.include('Lâm Đồng');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/Provinces?region=Trung",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "Provinces"
+              ],
+              "query": [
+                {
+                  "key": "region",
+                  "value": "Trung"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "2.3 Xem chi tiết Tỉnh thành ID=1 (200 OK)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200 OK', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/Provinces/1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "Provinces",
+                "1"
+              ]
+            }
+          }
+        },
+        {
+          "name": "2.4 Xem Tỉnh thành không tồn tại ID=9999 (404 Not Found)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 404 Not Found', function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/Provinces/9999",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "Provinces",
+                "9999"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Places & Weather (Địa điểm & Thời tiết)",
+      "item": [
+        {
+          "name": "3.1 Tìm kiếm tiếng Việt chữ hoa/thường 'đà nẵng' (200 OK)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200 OK', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Tìm thấy Bà Nà Hills tại Đà Nẵng', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.items.length).to.be.above(0);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/Places?tuKhoa=đà nẵng&sortBy=danhgia",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "Places"
+              ],
+              "query": [
+                {
+                  "key": "tuKhoa",
+                  "value": "đà nẵng"
+                },
+                {
+                  "key": "sortBy",
+                  "value": "danhgia"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "3.2 Kiểm tra chặn phân trang pageSize=999999 (Ép trần 100)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200 OK', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('PageSize bị ép trần về 100', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.pageSize).to.eql(100);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/Places?pageSize=999999",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "Places"
+              ],
+              "query": [
+                {
+                  "key": "pageSize",
+                  "value": "999999"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "3.3 Kiểm tra sortBy trường bịa ra không gây lỗi 500 (200 OK)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200 OK', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/Places?sortBy=truongBiaRa",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "Places"
+              ],
+              "query": [
+                {
+                  "key": "sortBy",
+                  "value": "truongBiaRa"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "3.4 Lấy chi tiết Địa điểm ID=1 (200 OK)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200 OK', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/Places/1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "Places",
+                "1"
+              ]
+            }
+          }
+        },
+        {
+          "name": "3.5 Lấy thời tiết Địa điểm ID=1 (Kiểm tra Cache / Fallback - 200 OK)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200 OK', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Có đầy đủ nhiệt độ, độ ẩm và khuyến nghị du lịch', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('temperature');",
+                  "    pm.expect(jsonData).to.have.property('humidity');",
+                  "    pm.expect(jsonData).to.have.property('recommendation');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/Places/1/weather",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "Places",
+                "1",
+                "weather"
+              ]
+            }
+          }
+        },
+        {
+          "name": "3.6 Tạo mới Địa điểm bỏ trống ImageUrl (Tự gán ảnh mặc định - 201 Created)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 201 Created', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "var jsonData = pm.response.json();",
+                  "pm.test('ImageUrl được tự động gán ảnh mặc định', function () {",
+                  "    pm.expect(jsonData.imageUrl).to.include('https://images.unsplash.com');",
+                  "});",
+                  "if (jsonData && jsonData.id) {",
+                  "    pm.collectionVariables.set('createdPlaceId', jsonData.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"provinceId\": 1,\n  \"categoryId\": 1,\n  \"name\": \"Bán Đảo Sơn Trà\",\n  \"description\": \"Lá phổi xanh của thành phố Đà Nẵng với chùa Linh Ứng.\",\n  \"address\": \"Quận Sơn Trà, TP. Đà Nẵng\",\n  \"imageUrl\": \"\",\n  \"latitude\": 16.106,\n  \"longitude\": 108.263,\n  \"ticketPriceAvg\": 0,\n  \"bookingUrl\": \"https://klook.com/sontra\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/Places",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "Places"
+              ]
+            }
+          }
+        },
+        {
+          "name": "3.7 Cập nhật Địa điểm không gửi BookingUrl (Bảo toàn BookingUrl cũ - 200 OK)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200 OK', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"provinceId\": 1,\n  \"categoryId\": 1,\n  \"name\": \"Bán Đảo Sơn Trà (Đã cập nhật)\",\n  \"description\": \"Mô tả đã được cập nhật từ Postman.\",\n  \"address\": \"Phường Thọ Quang, Quận Sơn Trà, TP. Đà Nẵng\",\n  \"imageUrl\": \"\",\n  \"latitude\": 16.106,\n  \"longitude\": 108.263,\n  \"ticketPriceAvg\": 50000\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/Places/{{createdPlaceId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "Places",
+                "{{createdPlaceId}}"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Favorites & Reviews (Sổ tay & Đánh giá)",
+      "item": [
+        {
+          "name": "4.1 Toggle Lưu yêu thích (200 OK)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200 OK', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": {{testUserId}},\n  \"placeId\": 1\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/Favorites/toggle",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "Favorites",
+                "toggle"
+              ]
+            }
+          }
+        },
+        {
+          "name": "4.2 Xem danh sách yêu thích của User (Đầy đủ DTO - 200 OK)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200 OK', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('DTO trả về có đầy đủ region và provinceId', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    if (jsonData.length > 0) {",
+                  "        pm.expect(jsonData[0]).to.have.property('region');",
+                  "        pm.expect(jsonData[0]).to.have.property('provinceId');",
+                  "    }",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/Favorites/user/{{testUserId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "Favorites",
+                "user",
+                "{{testUserId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "4.3 Gửi đánh giá mới (201 Created)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 201 Created', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData && jsonData.id) {",
+                  "    pm.collectionVariables.set('createdReviewId', jsonData.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": {{testUserId}},\n  \"placeId\": 1,\n  \"rating\": 5,\n  \"comment\": \"Cảnh đẹp tuyệt vời, thời tiết rất mát mẻ!\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/Reviews",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "Reviews"
+              ]
+            }
+          }
+        },
+        {
+          "name": "4.4 Gửi đánh giá sai số sao Rating=10 (400 Bad Request)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 400 Bad Request', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": {{testUserId}},\n  \"placeId\": 1,\n  \"rating\": 10,\n  \"comment\": \"Điểm sao vượt quá 5\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/Reviews",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "Reviews"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Admin Portal (Quản trị & Thống kê)",
+      "item": [
+        {
+          "name": "5.1 Thống kê tổng quan Dashboard (200 OK)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200 OK', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/Admin/dashboard-stats",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "Admin",
+                "dashboard-stats"
+              ]
+            }
+          }
+        },
+        {
+          "name": "5.2 Dữ liệu Biểu đồ thống kê (200 OK)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200 OK', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/Admin/chart-stats",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "Admin",
+                "chart-stats"
+              ]
+            }
+          }
+        },
+        {
+          "name": "5.3 Tìm kiếm người dùng tiếng Việt 'kiệt' (200 OK)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200 OK', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Tìm thấy Hồ Nhân Kiệt', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.length).to.be.above(0);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/Admin/users?tuKhoa=kiệt",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "Admin",
+                "users"
+              ],
+              "query": [
+                {
+                  "key": "tuKhoa",
+                  "value": "kiệt"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "5.4 Chặn xóa tài khoản Admin tối cao ID=1 (400 Bad Request)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 400 Bad Request', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/Admin/users/1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "Admin",
+                "users",
+                "1"
+              ]
+            }
+          }
+        },
+        {
+          "name": "5.5 Chặn xóa Tỉnh thành đang có Địa điểm ID=1 (400 Bad Request)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 400 Bad Request', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/Admin/provinces/1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "Admin",
+                "provinces",
+                "1"
+              ]
+            }
+          }
+        },
+        {
+          "name": "5.6 Xóa Đánh giá vừa tạo & cập nhật lại RatingAvg (200 OK)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200 OK', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/Admin/reviews/{{createdReviewId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "Admin",
+                "reviews",
+                "{{createdReviewId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "5.7 Dọn dẹp: Xóa Địa điểm thử nghiệm vừa tạo (204 No Content)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 204 No Content', function () {",
+                  "    pm.response.to.have.status(204);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/Places/{{createdPlaceId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "Places",
+                "{{createdPlaceId}}"
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
