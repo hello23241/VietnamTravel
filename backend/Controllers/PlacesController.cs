@@ -20,6 +20,28 @@ public class PlacesController : ControllerBase
         _weatherService = weatherService;
     }
 
+    /// <summary>
+    /// Chuyển đổi Slug ảnh từ Database thành URL thực tế tải qua GitHub jsDelivr CDN
+    /// </summary>
+    private static string GetFullImageUrl(string? dbUrl)
+    {
+        if (string.IsNullOrWhiteSpace(dbUrl))
+            return "https://images.unsplash.com/photo-1528127269322-539801943592";
+
+        var trimmed = dbUrl.Trim();
+        
+        // Nếu Admin đã nhập link web đầy đủ (http/https) thì giữ nguyên
+        if (trimmed.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
+            trimmed.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+        {
+            return trimmed;
+        }
+
+        // Tự động ghép Base URL của GitHub CDN nếu chỉ nhập slug (vd: "vinh-ha-long.jpg")
+        const string baseUrl = "https://cdn.jsdelivr.net/gh/hello23241/VietnamTravel@main/images/";
+        return $"{baseUrl}{trimmed}";
+    }
+
     [HttpGet]
     public async Task<ActionResult<PagedResult<PlaceResponseDto>>> GetPlaces(
         [FromQuery] int? provinceId,
@@ -50,7 +72,7 @@ public class PlacesController : ControllerBase
                 Name = p.Name,
                 Description = p.Description,
                 Address = p.Address,
-                ImageUrl = p.ImageUrl,
+                ImageUrl = p.ImageUrl, // Sẽ được xử lý URL bên dưới
                 Latitude = p.Latitude,
                 Longitude = p.Longitude,
                 TicketPriceAvg = p.TicketPriceAvg,
@@ -94,6 +116,12 @@ public class PlacesController : ControllerBase
         var items = finalList
             .Skip((pageNumber - 1) * pageSize)
             .Take(pageSize)
+            .Select(p =>
+            {
+                // Gọi hàm nội suy ảnh cho từng địa điểm
+                p.ImageUrl = GetFullImageUrl(p.ImageUrl);
+                return p;
+            })
             .ToList();
 
         return Ok(new PagedResult<PlaceResponseDto>
@@ -122,7 +150,7 @@ public class PlacesController : ControllerBase
                 Name = p.Name,
                 Description = p.Description,
                 Address = p.Address,
-                ImageUrl = p.ImageUrl,
+                ImageUrl = p.ImageUrl, // Sẽ được xử lý URL bên dưới
                 Latitude = p.Latitude,
                 Longitude = p.Longitude,
                 TicketPriceAvg = p.TicketPriceAvg,
@@ -134,6 +162,9 @@ public class PlacesController : ControllerBase
 
         if (place == null)
             return NotFound(new { message = $"Không tìm thấy địa điểm với mã {id}" });
+
+        // Nối link CDN vào slug ảnh
+        place.ImageUrl = GetFullImageUrl(place.ImageUrl);
 
         return Ok(place);
     }
@@ -156,8 +187,9 @@ public class PlacesController : ControllerBase
             Name = dto.Name.Trim(),
             Description = dto.Description.Trim(),
             Address = dto.Address.Trim(),
+            // Lưu trực tiếp chuỗi được nhập vào (slug)
             ImageUrl = string.IsNullOrWhiteSpace(dto.ImageUrl)
-                ? "https://images.unsplash.com/photo-1528127269322-539801943592"
+                ? "default-placeholder.jpg"
                 : dto.ImageUrl.Trim(),
             Latitude = dto.Latitude,
             Longitude = dto.Longitude,
@@ -180,7 +212,8 @@ public class PlacesController : ControllerBase
             Name = place.Name,
             Description = place.Description,
             Address = place.Address,
-            ImageUrl = place.ImageUrl,
+            // Trả về link ảnh đầy đủ sau khi vừa tạo xong
+            ImageUrl = GetFullImageUrl(place.ImageUrl),
             Latitude = place.Latitude,
             Longitude = place.Longitude,
             TicketPriceAvg = place.TicketPriceAvg,
@@ -212,7 +245,10 @@ public class PlacesController : ControllerBase
         place.Name = dto.Name.Trim();
         place.Description = dto.Description.Trim();
         place.Address = dto.Address.Trim();
+        
+        // Cập nhật lại slug mới nếu có
         place.ImageUrl = string.IsNullOrWhiteSpace(dto.ImageUrl) ? place.ImageUrl : dto.ImageUrl.Trim();
+        
         place.Latitude = dto.Latitude;
         place.Longitude = dto.Longitude;
         place.TicketPriceAvg = dto.TicketPriceAvg;

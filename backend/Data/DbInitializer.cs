@@ -111,7 +111,7 @@ public static class DbInitializer
                     CategoryId = 1, Name = "Đèo Mã Pí Lèng",
                     Description = "Một trong 'tứ đại đỉnh đèo' của Việt Nam, mang vẻ đẹp ngoạn mục với những vách đá dựng đứng và dòng sông Nho Quế xanh biếc dưới vực sâu.",
                     Address = "Huyện Mèo Vạc, Tỉnh Hà Giang",
-                    ImageUrl = "https://images.unsplash.com/photo-1634629478817-64010a30b42f",
+                    ImageUrl = "deo_ma_pi_leng.jpg",
                     Latitude = 23.2384, Longitude = 105.4290, TicketPriceAvg = 0m, RatingAvg = 4.9f
                 },
                 new Place {
@@ -119,7 +119,7 @@ public static class DbInitializer
                     CategoryId = 2, Name = "Phố Ẩm Thực Tống Duy Tân",
                     Description = "Con phố ẩm thực mở xuyên đêm nổi tiếng tại thủ đô với gà tần, phở, bún miến đa dạng mang đậm hương vị Hà Thành.",
                     Address = "Phố Tống Duy Tân, Hàng Bông, Hoàn Kiếm, Hà Nội",
-                    ImageUrl = "https://images.unsplash.com/photo-1559592413-7cec4d0cae2b",
+                    ImageUrl = "pho-tong-duy-tan.jpg",
                     Latitude = 21.0298, Longitude = 105.8433, TicketPriceAvg = 0m, RatingAvg = 4.3f
                 },
 
@@ -129,7 +129,7 @@ public static class DbInitializer
                     CategoryId = 3, Name = "Kinh Thành Huế (Đại Nội)",
                     Description = "Công trình kiến trúc cung đình triều Nguyễn đồ sộ với các cung điện vàng son, đền đài nguy nga mang đậm dấu ấn lịch sử.",
                     Address = "Đường 23/8, Phường Thuận Hòa, TP. Huế",
-                    ImageUrl = "https://images.unsplash.com/photo-1582298918804-032ce96317b3",
+                    ImageUrl = "dai-noi-hue.webp",
                     Latitude = 16.4674, Longitude = 107.5753, TicketPriceAvg = 200000m, RatingAvg = 4.7f
                 },
                 new Place {
@@ -137,7 +137,7 @@ public static class DbInitializer
                     CategoryId = 3, Name = "Phố cổ Hội An",
                     Description = "Thương cảng xưa tĩnh lặng với những ngôi nhà cổ tường vàng mái ngói rêu phong, lung linh ánh lồng đèn về đêm.",
                     Address = "Phường Minh An, TP. Hội An, Quảng Nam",
-                    ImageUrl = "https://images.unsplash.com/photo-1543012173-7e4e1de866d9",
+                    ImageUrl = "hoi-an-quang-nam.jpg",
                     Latitude = 15.8795, Longitude = 108.3283, TicketPriceAvg = 120000m, RatingAvg = 4.8f
                 },
                 new Place {
@@ -145,7 +145,7 @@ public static class DbInitializer
                     CategoryId = 1, Name = "VinWonders Nha Trang",
                     Description = "Công viên giải trí của những kỷ lục trên đảo Hòn Tre. Hệ sinh thái trò chơi cảm giác mạnh, công viên nước và show diễn hoành tráng.",
                     Address = "Đảo Hòn Tre, Phường Vĩnh Nguyên, TP. Nha Trang",
-                    ImageUrl = "https://images.unsplash.com/photo-1627993351984-7a31b6df3dc4",
+                    ImageUrl = "vinwonders.jpg",
                     Latitude = 12.2173, Longitude = 109.2458, TicketPriceAvg = 950000m, BookingUrl = "https://vinwonders.com/nha-trang/", RatingAvg = 4.8f
                 },
                 new Place {
@@ -153,7 +153,7 @@ public static class DbInitializer
                     CategoryId = 4, Name = "Đồi Cát Bay Mũi Né",
                     Description = "Tiểu sa mạc thay đổi hình dáng theo giờ. Khám phá vẻ đẹp cồn cát đỏ rực và trải nghiệm trò chơi trượt cát thú vị.",
                     Address = "Khu phố 5, Phường Mũi Né, TP. Phan Thiết",
-                    ImageUrl = "https://images.unsplash.com/photo-1549646875-1e35a1fcf151",
+                    ImageUrl = "doi-cat-bay-mui-ne.jpg",
                     Latitude = 10.9577, Longitude = 108.2917, TicketPriceAvg = 15000m, RatingAvg = 4.2f
                 },
                 new Place {
@@ -161,7 +161,7 @@ public static class DbInitializer
                     CategoryId = 1, Name = "Khu du lịch Thác Datanla",
                     Description = "Hệ thống thác nước hoang sơ hùng vĩ kết hợp máng trượt alpine coaster dài nhất Đông Nam Á băng qua rừng thông xanh.",
                     Address = "QL20 Đèo Prenn, Phường 3, TP. Đà Lạt",
-                    ImageUrl = "https://images.unsplash.com/photo-1632731557997-db4f89d48b1d",
+                    ImageUrl = "thac-datanla.jpg",
                     Latitude = 11.9022, Longitude = 108.4497, TicketPriceAvg = 50000m, RatingAvg = 4.5f
                 },
 
@@ -171,7 +171,7 @@ public static class DbInitializer
                     CategoryId = 1, Name = "Grand World Phú Quốc",
                     Description = "Thành phố không ngủ lấy cảm hứng từ Venice (Ý) với dòng kênh đào lãng mạn, các dãy phố shophouse rực rỡ và show sắc màu Venice.",
                     Address = "Gành Dầu, Đảo Phú Quốc, Tỉnh Kiên Giang",
-                    ImageUrl = "https://images.unsplash.com/photo-1662991040409-e85d852a36b3",
+                    ImageUrl = "grand-world-phu-quoc.jpg",
                     Latitude = 10.3346, Longitude = 103.8550, TicketPriceAvg = 0m, RatingAvg = 4.6f
                 },
                 new Place {
@@ -179,7 +179,7 @@ public static class DbInitializer
                     CategoryId = 1, Name = "Bãi Sao",
                     Description = "Bãi biển đẹp nhất Phú Quốc với dải cát trắng mịn như kem cong cong hình lưỡi liềm bên làn nước trong xanh êm đềm.",
                     Address = "Thị trấn An Thới, TP. Phú Quốc, Kiên Giang",
-                    ImageUrl = "https://images.unsplash.com/photo-1632009277028-17a7e372ce66",
+                    ImageUrl = "bai-sao.jpg",
                     Latitude = 10.0543, Longitude = 104.0353, TicketPriceAvg = 0m, RatingAvg = 4.7f
                 },
                 new Place {
@@ -187,7 +187,7 @@ public static class DbInitializer
                     CategoryId = 3, Name = "Khu Du Lịch Núi Bà Đen",
                     Description = "Nóc nhà Đông Nam Bộ linh thiêng với hệ thống chùa cổ kính và tượng Phật Bà Tây Bổ Đà Sơn đúc bằng đồng cao nhất Châu Á.",
                     Address = "Thạnh Tân, TP. Tây Ninh",
-                    ImageUrl = "https://images.unsplash.com/photo-1678121639726-dcabdf427e1f",
+                    ImageUrl = "nui-ba-den.jpg",
                     Latitude = 11.3745, Longitude = 106.1703, TicketPriceAvg = 400000m, BookingUrl = "https://badenmountain.sunworld.vn/", RatingAvg = 4.8f
                 },
                 new Place {
@@ -195,7 +195,7 @@ public static class DbInitializer
                     CategoryId = 3, Name = "Tượng Chúa Dang Tay",
                     Description = "Công trình tôn giáo biểu tượng của Vũng Tàu trên đỉnh Núi Nhỏ. Du khách leo 1000 bậc thang để ngắm toàn cảnh thành phố biển.",
                     Address = "Thùy Vân, Phường 2, TP. Vũng Tàu",
-                    ImageUrl = "https://images.unsplash.com/photo-1590059343717-b7692488a0ab",
+                    ImageUrl = "tuong-chua-dang-tay.jpg",
                     Latitude = 10.3275, Longitude = 107.0858, TicketPriceAvg = 0m, RatingAvg = 4.5f
                 },
                 new Place {
@@ -203,7 +203,7 @@ public static class DbInitializer
                     CategoryId = 3, Name = "Dinh Độc Lập",
                     Description = "Di tích lịch sử cấp quốc gia đặc biệt, nơi đánh dấu sự kiện thống nhất đất nước ngày 30/4/1975, sở hữu kiến trúc cổ kính độc đáo.",
                     Address = "135 Nam Kỳ Khởi Nghĩa, Phường Bến Thành, Quận 1, TP. HCM",
-                    ImageUrl = "https://images.unsplash.com/photo-1629853310065-27ff330bc6c0",
+                    ImageUrl = "dinh-doc-lap.jpg",
                     Latitude = 10.7769, Longitude = 106.6953, TicketPriceAvg = 65000m, RatingAvg = 4.6f
                 }
             };
