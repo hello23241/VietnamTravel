@@ -70,10 +70,10 @@ export default function DetailScreen({ route, navigation }) {
     }
   };
 
-  // Mở Google Maps chỉ đường theo tọa độ GPS
   const handleOpenGoogleMaps = () => {
     if (!place) return;
-    const url = `https://www.google.com/maps/search/?api=1&query=${place.latitude},${place.longitude}`;
+    const searchQuery = encodeURIComponent(`${place.name}, ${place.address || place.provinceName}`);
+    const url = `https://www.google.com/maps/search/${searchQuery}/@${place.latitude},${place.longitude},16z`;
     Linking.openURL(url).catch(() => {
       Alert.alert('Lỗi', 'Không thể khởi chạy ứng dụng Google Maps');
     });

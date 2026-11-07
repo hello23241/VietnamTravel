@@ -562,7 +562,9 @@ export default function DetailPage() {
 
               {/* Nút mở bản đồ: Tìm kiếm theo Tên địa danh + Địa chỉ để hiển thị trọn vẹn hồ sơ, ảnh chụp và đánh giá như Hình 1 */}
               <a
-                href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(place.name + ' ' + (place.address || ''))}`}
+                href={`https://www.google.com/maps/search/${encodeURIComponent(
+                  `${place.name}, ${place.address || place.provinceName}`
+                )}/@${place.latitude},${place.longitude},16z`}
                 target="_blank"
                 rel="noreferrer"
                 className="w-full py-3 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-xl transition flex items-center justify-center gap-2 shadow-sm"
