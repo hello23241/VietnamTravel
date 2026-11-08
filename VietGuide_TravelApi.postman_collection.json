@@ -1,8 +1,8 @@
 {
   "info": {
-    "_postman_id": "b8f9a2d1-6c4e-4a1b-9f0e-2d3c4b5a6e7f",
-    "name": "VietGuide Travel API - Full Test Suite",
-    "description": "Bộ kịch bản kiểm thử tự động toàn diện cho Backend TravelGuide.Api (.NET 8 + SQLite).",
+    "_postman_id": "c9f8e7d6-5b4a-4c3d-8e2f-1a2b3c4d5e6f",
+    "name": "VietGuide Travel API - Full Test Suite v2 (CDN & 20 Places)",
+    "description": "Bộ kịch bản kiểm thử tự động toàn diện v2 cho Backend TravelGuide.Api (.NET 8 + SQLite) - Đã cập nhật kiểm thử nội suy link ảnh GitHub jsDelivr CDN, 15 tỉnh thành, 20 địa điểm, IMemoryCache thời tiết và đầy đủ Admin CRUD.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -25,6 +25,16 @@
       "key": "createdReviewId",
       "value": "1",
       "type": "string"
+    },
+    {
+      "key": "createdProvinceId",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "createdCategoryId",
+      "value": "1",
+      "type": "string"
     }
   ],
   "item": [
@@ -41,7 +51,7 @@
                   "pm.test('Status code is 200 OK', function () {",
                   "    pm.response.to.have.status(200);",
                   "});",
-                  "pm.test('Trả về đúng username admin và không lộ PasswordHash', function () {",
+                  "pm.test('Trả về đúng username admin và ẩn PasswordHash', function () {",
                   "    var jsonData = pm.response.json();",
                   "    pm.expect(jsonData.username).to.eql('admin');",
                   "    pm.expect(jsonData).to.not.have.property('passwordHash');",
@@ -129,7 +139,10 @@
                   "var jsonData = pm.response.json();",
                   "if (jsonData && jsonData.id) {",
                   "    pm.collectionVariables.set('testUserId', jsonData.id);",
-                  "}"
+                  "}",
+                  "pm.test('Tự động tạo AvatarUrl mặc định khi bỏ trống', function () {",
+                  "    pm.expect(jsonData.avatarUrl).to.include('https://ui-avatars.com/api/');",
+                  "});"
                 ],
                 "type": "text/javascript"
               }
@@ -203,7 +216,7 @@
       ]
     },
     {
-      "name": "2. Categories & Provinces (Danh mục & Tỉnh thành)",
+      "name": "2. Categories & Provinces (Danh mục & 15 Tỉnh thành)",
       "item": [
         {
           "name": "2.1 Lấy tất cả Danh mục (200 OK)",
@@ -215,9 +228,9 @@
                   "pm.test('Status code is 200 OK', function () {",
                   "    pm.response.to.have.status(200);",
                   "});",
-                  "pm.test('Danh sách danh mục không rỗng', function () {",
+                  "pm.test('Danh sách có tối thiểu 4 danh mục chuẩn', function () {",
                   "    var jsonData = pm.response.json();",
-                  "    pm.expect(jsonData.length).to.be.above(0);",
+                  "    pm.expect(jsonData.length).to.be.at.least(4);",
                   "});"
                 ],
                 "type": "text/javascript"
@@ -240,7 +253,7 @@
           }
         },
         {
-          "name": "2.2 Lấy danh sách Tỉnh thành theo miền Trung (200 OK)",
+          "name": "2.2 Lấy tất cả Tỉnh thành với region=all (15 tỉnh - 200 OK)",
           "event": [
             {
               "listen": "test",
@@ -249,7 +262,47 @@
                   "pm.test('Status code is 200 OK', function () {",
                   "    pm.response.to.have.status(200);",
                   "});",
-                  "pm.test('Có chứa Đà Nẵng và Lâm Đồng (đã đồng bộ về miền Trung)', function () {",
+                  "pm.test('Đã nạp đủ tối thiểu 15 tỉnh thành khi gửi region=all', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.length).to.be.at.least(15);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/Provinces?region=all",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "Provinces"
+              ],
+              "query": [
+                {
+                  "key": "region",
+                  "value": "all"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "2.3 Lọc Tỉnh thành theo miền Trung (Đà Nẵng, Lâm Đồng, Huế, Quảng Nam...)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200 OK', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Có chứa Đà Nẵng, Lâm Đồng và Thừa Thiên Huế', function () {",
                   "    var jsonData = pm.response.json();",
                   "    var names = jsonData.map(p => p.name);",
                   "    pm.expect(names).to.include('Đà Nẵng');",
@@ -282,7 +335,7 @@
           }
         },
         {
-          "name": "2.3 Xem chi tiết Tỉnh thành ID=1 (200 OK)",
+          "name": "2.4 Xem chi tiết Tỉnh thành ID=1 (200 OK)",
           "event": [
             {
               "listen": "test",
@@ -313,7 +366,7 @@
           }
         },
         {
-          "name": "2.4 Xem Tỉnh thành không tồn tại ID=9999 (404 Not Found)",
+          "name": "2.5 Xem Tỉnh thành không tồn tại ID=9999 (404 Not Found)",
           "event": [
             {
               "listen": "test",
@@ -346,10 +399,10 @@
       ]
     },
     {
-      "name": "3. Places & Weather (Địa điểm & Thời tiết)",
+      "name": "3. Places, CDN Image & Weather (Địa điểm, Ảnh CDN & Thời tiết)",
       "item": [
         {
-          "name": "3.1 Tìm kiếm tiếng Việt chữ hoa/thường 'đà nẵng' (200 OK)",
+          "name": "3.1 Lấy danh sách 20 Địa điểm & Kiểm tra nội suy link ảnh CDN (200 OK)",
           "event": [
             {
               "listen": "test",
@@ -358,7 +411,50 @@
                   "pm.test('Status code is 200 OK', function () {",
                   "    pm.response.to.have.status(200);",
                   "});",
-                  "pm.test('Tìm thấy Bà Nà Hills tại Đà Nẵng', function () {",
+                  "pm.test('Mọi địa điểm đều có ImageUrl bắt đầu bằng http/https (Đã nối CDN)', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.items.length).to.be.above(0);",
+                  "    jsonData.items.forEach(function(item) {",
+                  "        pm.expect(item.imageUrl).to.match(/^https?:\\/\\//i);",
+                  "    });",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/Places?pageSize=50",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "Places"
+              ],
+              "query": [
+                {
+                  "key": "pageSize",
+                  "value": "50"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "3.2 Tìm kiếm tiếng Việt chữ hoa/thường 'đà nẵng' (200 OK)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200 OK', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Tìm thấy địa điểm tại Đà Nẵng', function () {",
                   "    var jsonData = pm.response.json();",
                   "    pm.expect(jsonData.items.length).to.be.above(0);",
                   "});"
@@ -393,7 +489,7 @@
           }
         },
         {
-          "name": "3.2 Kiểm tra chặn phân trang pageSize=999999 (Ép trần 100)",
+          "name": "3.3 Kiểm tra chặn phân trang pageSize=999999 (Ép trần 100)",
           "event": [
             {
               "listen": "test",
@@ -433,7 +529,7 @@
           }
         },
         {
-          "name": "3.3 Kiểm tra sortBy trường bịa ra không gây lỗi 500 (200 OK)",
+          "name": "3.4 Kiểm tra sortBy trường bịa ra không gây lỗi 500 (200 OK)",
           "event": [
             {
               "listen": "test",
@@ -469,7 +565,7 @@
           }
         },
         {
-          "name": "3.4 Lấy chi tiết Địa điểm ID=1 (200 OK)",
+          "name": "3.5 Lấy chi tiết Địa điểm ID=1 (200 OK)",
           "event": [
             {
               "listen": "test",
@@ -477,6 +573,10 @@
                 "exec": [
                   "pm.test('Status code is 200 OK', function () {",
                   "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('ImageUrl hợp lệ', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.imageUrl).to.match(/^https?:\\/\\//i);",
                   "});"
                 ],
                 "type": "text/javascript"
@@ -500,7 +600,7 @@
           }
         },
         {
-          "name": "3.5 Lấy thời tiết Địa điểm ID=1 (Kiểm tra Cache / Fallback - 200 OK)",
+          "name": "3.6 Lấy thời tiết Địa điểm ID=1 (Kiểm tra Cache / Fallback - 200 OK)",
           "event": [
             {
               "listen": "test",
@@ -538,7 +638,7 @@
           }
         },
         {
-          "name": "3.6 Tạo mới Địa điểm bỏ trống ImageUrl (Tự gán ảnh mặc định - 201 Created)",
+          "name": "3.7 Tạo mới Địa điểm bỏ trống ImageUrl (Tự gán ảnh Unsplash mặc định - 201 Created)",
           "event": [
             {
               "listen": "test",
@@ -548,7 +648,7 @@
                   "    pm.response.to.have.status(201);",
                   "});",
                   "var jsonData = pm.response.json();",
-                  "pm.test('ImageUrl được tự động gán ảnh mặc định', function () {",
+                  "pm.test('ImageUrl được tự động gán ảnh Unsplash mặc định', function () {",
                   "    pm.expect(jsonData.imageUrl).to.include('https://images.unsplash.com');",
                   "});",
                   "if (jsonData && jsonData.id) {",
@@ -584,7 +684,7 @@
           }
         },
         {
-          "name": "3.7 Cập nhật Địa điểm không gửi BookingUrl (Bảo toàn BookingUrl cũ - 200 OK)",
+          "name": "3.8 Cập nhật Địa điểm nhập slug ảnh 'vinh-ha-long.webp' & không gửi BookingUrl (200 OK)",
           "event": [
             {
               "listen": "test",
@@ -608,8 +708,46 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"provinceId\": 1,\n  \"categoryId\": 1,\n  \"name\": \"Bán Đảo Sơn Trà (Đã cập nhật)\",\n  \"description\": \"Mô tả đã được cập nhật từ Postman.\",\n  \"address\": \"Phường Thọ Quang, Quận Sơn Trà, TP. Đà Nẵng\",\n  \"imageUrl\": \"\",\n  \"latitude\": 16.106,\n  \"longitude\": 108.263,\n  \"ticketPriceAvg\": 50000\n}"
+              "raw": "{\n  \"provinceId\": 1,\n  \"categoryId\": 1,\n  \"name\": \"Bán Đảo Sơn Trà (Đã cập nhật CDN)\",\n  \"description\": \"Mô tả đã được cập nhật kèm slug ảnh CDN.\",\n  \"address\": \"Phường Thọ Quang, Quận Sơn Trà, TP. Đà Nẵng\",\n  \"imageUrl\": \"vinh-ha-long.webp\",\n  \"latitude\": 16.106,\n  \"longitude\": 108.263,\n  \"ticketPriceAvg\": 50000\n}"
             },
+            "url": {
+              "raw": "{{baseUrl}}/api/Places/{{createdPlaceId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "Places",
+                "{{createdPlaceId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "3.9 Kiểm tra Địa điểm sau cập nhật: Có link jsDelivr CDN & giữ nguyên BookingUrl (200 OK)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200 OK', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "var jsonData = pm.response.json();",
+                  "pm.test('Slug ảnh được nối thành link GitHub jsDelivr CDN đầy đủ', function () {",
+                  "    pm.expect(jsonData.imageUrl).to.eql('https://cdn.jsdelivr.net/gh/hello23241/VietnamTravel@main/images/vinh-ha-long.webp');",
+                  "});",
+                  "pm.test('BookingUrl cũ vẫn được bảo toàn khi Web không gửi lên', function () {",
+                  "    pm.expect(jsonData.bookingUrl).to.eql('https://klook.com/sontra');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/Places/{{createdPlaceId}}",
               "host": [
@@ -626,10 +764,10 @@
       ]
     },
     {
-      "name": "4. Favorites & Reviews (Sổ tay & Đánh giá)",
+      "name": "4. Favorites & Reviews (Sổ tay CDN & Đánh giá)",
       "item": [
         {
-          "name": "4.1 Toggle Lưu yêu thích (200 OK)",
+          "name": "4.1 Toggle Lưu yêu thích Địa điểm dùng ảnh CDN (200 OK)",
           "event": [
             {
               "listen": "test",
@@ -653,7 +791,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"userId\": {{testUserId}},\n  \"placeId\": 1\n}"
+              "raw": "{\n  \"userId\": {{testUserId}},\n  \"placeId\": {{createdPlaceId}}\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/api/Favorites/toggle",
@@ -669,7 +807,7 @@
           }
         },
         {
-          "name": "4.2 Xem danh sách yêu thích của User (Đầy đủ DTO - 200 OK)",
+          "name": "4.2 Xem Sổ tay yêu thích của User (Kiểm tra ImageUrl đã nối CDN & đủ DTO - 200 OK)",
           "event": [
             {
               "listen": "test",
@@ -678,12 +816,12 @@
                   "pm.test('Status code is 200 OK', function () {",
                   "    pm.response.to.have.status(200);",
                   "});",
-                  "pm.test('DTO trả về có đầy đủ region và provinceId', function () {",
+                  "pm.test('Sổ tay yêu thích trả về đủ DTO và ImageUrl đã nối link CDN (không bị vỡ ảnh)', function () {",
                   "    var jsonData = pm.response.json();",
-                  "    if (jsonData.length > 0) {",
-                  "        pm.expect(jsonData[0]).to.have.property('region');",
-                  "        pm.expect(jsonData[0]).to.have.property('provinceId');",
-                  "    }",
+                  "    pm.expect(jsonData.length).to.be.above(0);",
+                  "    pm.expect(jsonData[0]).to.have.property('region');",
+                  "    pm.expect(jsonData[0]).to.have.property('provinceId');",
+                  "    pm.expect(jsonData[0].imageUrl).to.include('https://cdn.jsdelivr.net/gh/hello23241/VietnamTravel@main/images/');",
                   "});"
                 ],
                 "type": "text/javascript"
@@ -736,7 +874,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"userId\": {{testUserId}},\n  \"placeId\": 1,\n  \"rating\": 5,\n  \"comment\": \"Cảnh đẹp tuyệt vời, thời tiết rất mát mẻ!\"\n}"
+              "raw": "{\n  \"userId\": {{testUserId}},\n  \"placeId\": {{createdPlaceId}},\n  \"rating\": 5,\n  \"comment\": \"Cảnh đẹp tuyệt vời, thời tiết rất mát mẻ!\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/api/Reviews",
@@ -775,7 +913,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"userId\": {{testUserId}},\n  \"placeId\": 1,\n  \"rating\": 10,\n  \"comment\": \"Điểm sao vượt quá 5\"\n}"
+              "raw": "{\n  \"userId\": {{testUserId}},\n  \"placeId\": {{createdPlaceId}},\n  \"rating\": 10,\n  \"comment\": \"Điểm sao vượt quá 5\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/api/Reviews",
@@ -792,7 +930,7 @@
       ]
     },
     {
-      "name": "5. Admin Portal (Quản trị & Thống kê)",
+      "name": "5. Admin Portal (Quản trị, Kiểm duyệt & Dọn dẹp)",
       "item": [
         {
           "name": "5.1 Thống kê tổng quan Dashboard (200 OK)",
@@ -803,6 +941,11 @@
                 "exec": [
                   "pm.test('Status code is 200 OK', function () {",
                   "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Tổng số địa điểm >= 20 và tỉnh thành >= 15', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.totalPlaces).to.be.at.least(20);",
+                  "    pm.expect(jsonData.totalProvinces).to.be.at.least(15);",
                   "});"
                 ],
                 "type": "text/javascript"
@@ -962,7 +1105,56 @@
           }
         },
         {
-          "name": "5.6 Xóa Đánh giá vừa tạo & cập nhật lại RatingAvg (200 OK)",
+          "name": "5.6 Lọc danh sách Đánh giá 1 sao (Spam Filter - 200 OK)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200 OK', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Trả về cấu trúc phân trang hợp lệ', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('items');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/Admin/reviews?rating=1&pageNumber=1&pageSize=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "Admin",
+                "reviews"
+              ],
+              "query": [
+                {
+                  "key": "rating",
+                  "value": "1"
+                },
+                {
+                  "key": "pageNumber",
+                  "value": "1"
+                },
+                {
+                  "key": "pageSize",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "5.7 Xóa Đánh giá thử nghiệm vừa tạo & cập nhật lại RatingAvg (200 OK)",
           "event": [
             {
               "listen": "test",
@@ -994,7 +1186,7 @@
           }
         },
         {
-          "name": "5.7 Dọn dẹp: Xóa Địa điểm thử nghiệm vừa tạo (204 No Content)",
+          "name": "5.8 Dọn dẹp: Xóa Địa điểm thử nghiệm vừa tạo (204 No Content)",
           "event": [
             {
               "listen": "test",
@@ -1020,6 +1212,38 @@
                 "api",
                 "Places",
                 "{{createdPlaceId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "5.9 Dọn dẹp: Xóa Tài khoản thử nghiệm vừa tạo (200 OK)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200 OK', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/Admin/users/{{testUserId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "Admin",
+                "users",
+                "{{testUserId}}"
               ]
             }
           }

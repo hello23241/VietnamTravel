@@ -81,6 +81,11 @@ public class FavoritesController : ControllerBase
             })
             .ToListAsync();
 
+        foreach (var item in favoritePlaces)
+        {
+            item.ImageUrl = PlacesController.GetFullImageUrl(item.ImageUrl);
+        }
+
         return Ok(favoritePlaces);
     }
 }

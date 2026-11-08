@@ -1231,8 +1231,8 @@ export default function AdminPage() {
               <div>
                 <label className="block text-slate-700 mb-1">Đường dẫn ảnh đại diện (URL)</label>
                 <input
-                  type="url"
-                  placeholder="https://images.unsplash.com/..."
+                  type="text"
+                  placeholder="https://images.unsplash.com/... hoặc vinh-ha-long.webp"
                   value={editingPlace ? editingPlace.imageUrl : placeFormData.imageUrl}
                   onChange={(e) => {
                     const val = e.target.value;

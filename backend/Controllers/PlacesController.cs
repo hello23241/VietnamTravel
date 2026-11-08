@@ -20,26 +20,21 @@ public class PlacesController : ControllerBase
         _weatherService = weatherService;
     }
 
-    /// <summary>
-    /// Chuyển đổi Slug ảnh từ Database thành URL thực tế tải qua GitHub jsDelivr CDN
-    /// </summary>
-    private static string GetFullImageUrl(string? dbUrl)
+    public static string GetFullImageUrl(string? dbUrl)
     {
-        if (string.IsNullOrWhiteSpace(dbUrl))
+        if (string.IsNullOrWhiteSpace(dbUrl) || dbUrl.Trim().Equals("default-placeholder.jpg", StringComparison.OrdinalIgnoreCase))
             return "https://images.unsplash.com/photo-1528127269322-539801943592";
 
         var trimmed = dbUrl.Trim();
-        
-        // Nếu Admin đã nhập link web đầy đủ (http/https) thì giữ nguyên
+
         if (trimmed.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
             trimmed.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
         {
             return trimmed;
         }
 
-        // Tự động ghép Base URL của GitHub CDN nếu chỉ nhập slug (vd: "vinh-ha-long.jpg")
         const string baseUrl = "https://cdn.jsdelivr.net/gh/hello23241/VietnamTravel@main/images/";
-        return $"{baseUrl}{trimmed}";
+        return $"{baseUrl}{trimmed.TrimStart('/')}";
     }
 
     [HttpGet]
