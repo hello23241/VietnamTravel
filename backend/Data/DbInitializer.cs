@@ -111,7 +111,7 @@ public static class DbInitializer
                     CategoryId = 1, Name = "Đèo Mã Pí Lèng",
                     Description = "Một trong 'tứ đại đỉnh đèo' của Việt Nam, mang vẻ đẹp ngoạn mục với những vách đá dựng đứng và dòng sông Nho Quế xanh biếc dưới vực sâu.",
                     Address = "Huyện Mèo Vạc, Tỉnh Hà Giang",
-                    ImageUrl = "deo_ma_pi_leng.jpg",
+                    ImageUrl = "deo-ma-pi-leng.jpg",
                     Latitude = 23.2384, Longitude = 105.4290, TicketPriceAvg = 0m, RatingAvg = 4.9f
                 },
                 new Place {
