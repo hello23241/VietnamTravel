@@ -40,9 +40,9 @@ namespace TravelGuide.Api.Migrations
                 values: new object[,]
                 {
                     { 1, "Xã Hòa Ninh, Huyện Hòa Vang, TP. Đà Nẵng", "https://klook.com/banahills", 1, "Khu du lịch trên đỉnh núi Chúa với Cầu Vàng nổi tiếng thế giới.", "https://images.unsplash.com/photo-1596401057633-54a8fe8ef647", 15.998799999999999, 107.99590000000001, "Bà Nà Hills", 1, 4.8f, 900000.0 },
-                    { 2, "Quận Hoàn Kiếm, TP. Hà Nội", null, 3, "Trái tim của thủ đô Hà Nội, gắn liền với truyền thuyết vua Lê Lợi trả gươm báu.", "https://images.unsplash.com/photo-1509042239860-f550ce710b93", 21.028700000000001, 105.8523, "Hồ Hoàn Kiếm và Đền Ngọc Sơn", 2, 4.7f, 30000.0 },
-                    { 3, "Phường Bến Thành, Quận 1, TP. Hồ Chí Minh", null, 2, "Biểu tượng giao thương lâu đời với khu ẩm thực đêm sầm uất.", "https://images.unsplash.com/photo-1583417319070-4a69db38a482", 10.772500000000001, 106.69799999999999, "Chợ Bến Thành", 3, 4.5f, 0.0 },
-                    { 4, "Đường Trần Quốc Toản, Phường 10, TP. Đà Lạt", null, 4, "Công trình kiến trúc nụ hoa Atiso và hoa Dã Quỳ khổng lồ bên hồ Xuân Hương.", "https://images.unsplash.com/photo-1544644181-1484b3fdfc62", 11.9366, 108.4449, "Quảng trường Lâm Viên", 4, 4.6f, 0.0 }
+                    { 2, "Quận Hoàn Kiếm, TP. Hà Nội", null, 3, "Trái tim của thủ đô Hà Nội, gắn liền với truyền thuyết vua Lê Lợi trả gươm báu.", "ho-hoan-kiem.jpg", 21.028700000000001, 105.8523, "Hồ Hoàn Kiếm và Đền Ngọc Sơn", 2, 4.7f, 30000.0 },
+                    { 3, "Phường Bến Thành, Quận 1, TP. Hồ Chí Minh", null, 2, "Biểu tượng giao thương lâu đời với khu ẩm thực đêm sầm uất.", "cho-ben-thanh.jpg", 10.772500000000001, 106.69799999999999, "Chợ Bến Thành", 3, 4.5f, 0.0 },
+                    { 4, "Đường Trần Quốc Toản, Phường 10, TP. Đà Lạt", null, 4, "Công trình kiến trúc nụ hoa Atiso và hoa Dã Quỳ khổng lồ bên hồ Xuân Hương.", "quang-truong-lam-vien.webp", 11.9366, 108.4449, "Quảng trường Lâm Viên", 4, 4.6f, 0.0 }
                 });
         }
 

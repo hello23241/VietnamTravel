@@ -17,6 +17,21 @@ public static class DbInitializer
             context.SaveChanges();
         }
 
+        // TỰ ĐỘNG CẬP NHẬT ẢNH CDN CHO CSDL ĐÃ TẠO TỪ TRƯỚC
+        var place2 = context.Places.FirstOrDefault(p => p.Id == 2);
+        if (place2 != null && place2.ImageUrl.StartsWith("http")) place2.ImageUrl = "ho-hoan-kiem.jpg";
+
+        var place3 = context.Places.FirstOrDefault(p => p.Id == 3);
+        if (place3 != null && place3.ImageUrl.StartsWith("http")) place3.ImageUrl = "cho-ben-thanh.jpg";
+
+        var place4 = context.Places.FirstOrDefault(p => p.Id == 4);
+        if (place4 != null && place4.ImageUrl.StartsWith("http")) place4.ImageUrl = "quang-truong-lam-vien.webp";
+
+        var maPiLeng = context.Places.FirstOrDefault(p => p.ImageUrl == "deo_ma_pi_leng.jpg");
+        if (maPiLeng != null) maPiLeng.ImageUrl = "deo-ma-pi-leng.jpg";
+
+        context.SaveChanges();
+
         // 2. SEED TÀI KHOẢN ADMIN VÀ USER
         if (!context.Users.Any(u => u.Username.ToLower() == "admin"))
         {
