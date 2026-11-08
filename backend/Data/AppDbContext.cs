@@ -124,7 +124,7 @@ public class AppDbContext : DbContext
                 Name = "Quảng trường Lâm Viên",
                 Description = "Công trình kiến trúc nụ hoa Atiso và hoa Dã Quỳ khổng lồ bên hồ Xuân Hương.",
                 Address = "Đường Trần Quốc Toản, Phường 10, TP. Đà Lạt",
-                ImageUrl = "https://images.unsplash.com/photo-1544644181-1484b3fdfc62",
+                ImageUrl = "quang-truong-lam-vien.webp",
                 Latitude = 11.9366,
                 Longitude = 108.4449,
                 TicketPriceAvg = 0m,
