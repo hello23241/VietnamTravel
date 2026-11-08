@@ -34,7 +34,7 @@ public class ReviewsController : ControllerBase
             {
                 Id = r.Id,
                 UserId = r.UserId,
-                Username = r.User != null ? r.User.Username : string.Empty,
+                UserEmail = r.User != null ? r.User.Email : string.Empty,
                 UserFullname = r.User != null ? r.User.Fullname : string.Empty,
                 UserAvatarUrl = r.User != null ? r.User.AvatarUrl : null,
                 Rating = r.Rating,
@@ -77,11 +77,11 @@ public class ReviewsController : ControllerBase
         _context.Reviews.Add(review);
         await _context.SaveChangesAsync();
 
-        var responseDto = new ReviewResponseDto
+            var responseDto = new ReviewResponseDto
         {
             Id = review.Id,
             UserId = user.Id,
-            Username = user.Username,
+            UserEmail = user.Email,
             UserFullname = user.Fullname,
             UserAvatarUrl = user.AvatarUrl,
             Rating = review.Rating,

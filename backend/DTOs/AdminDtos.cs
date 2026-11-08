@@ -43,22 +43,22 @@ public class TopPlaceDto
 public class AdminUserDto
 {
     public int Id { get; set; }
-    public string Username { get; set; } = string.Empty;
+    public string Email { get; set; } = string.Empty;
     public string Fullname { get; set; } = string.Empty;
     public string? AvatarUrl { get; set; }
+    public string Role { get; set; } = "User";
     public DateTime CreatedAt { get; set; }
     public int TotalReviews { get; set; }
     public int TotalFavorites { get; set; }
 }
 
-// 4. DTO đánh giá chi tiết
 public class AdminReviewDto
 {
     public int Id { get; set; }
     public int PlaceId { get; set; }
     public string PlaceName { get; set; } = string.Empty;
     public int UserId { get; set; }
-    public string Username { get; set; } = string.Empty;
+    public string UserEmail { get; set; } = string.Empty;
     public string UserFullname { get; set; } = string.Empty;
     public int Rating { get; set; }
     public string? Comment { get; set; }

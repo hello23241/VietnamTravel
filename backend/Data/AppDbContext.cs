@@ -49,7 +49,7 @@ public class AppDbContext : DbContext
             .OnDelete(DeleteBehavior.Cascade);
 
         modelBuilder.Entity<User>()
-            .HasIndex(u => u.Username)
+            .HasIndex(u => u.Email)
             .IsUnique();
 
         modelBuilder.Entity<Place>()

@@ -33,26 +33,26 @@ public static class DbInitializer
         context.SaveChanges();
 
         // 2. SEED TÀI KHOẢN ADMIN VÀ USER
-        if (!context.Users.Any(u => u.Username.ToLower() == "admin"))
+        if (!context.Users.Any(u => u.Email.ToLower() == "admin@vietguide.com"))
         {
             context.Users.Add(new User
             {
-                Username = "admin",
-                PasswordHash = BCrypt.Net.BCrypt.HashPassword("admin123"),
+                Email = "admin@vietguide.com",
                 Fullname = "Quản trị viên Hệ thống",
                 AvatarUrl = "https://ui-avatars.com/api/?name=Admin+VietGuide",
+                Role = "Admin",
                 CreatedAt = DateTime.UtcNow
             });
         }
 
-        if (!context.Users.Any(u => u.Username.ToLower() == "kietho"))
+        if (!context.Users.Any(u => u.Email.ToLower() == "kietho@gmail.com"))
         {
             context.Users.Add(new User
             {
-                Username = "kietho",
-                PasswordHash = BCrypt.Net.BCrypt.HashPassword("123456"),
+                Email = "kietho@gmail.com",
                 Fullname = "Hồ Nhân Kiệt",
                 AvatarUrl = "https://ui-avatars.com/api/?name=Kiet+Ho",
+                Role = "User",
                 CreatedAt = DateTime.UtcNow
             });
         }
@@ -230,7 +230,7 @@ public static class DbInitializer
         // 5. SEED ĐÁNH GIÁ MẪU
         if (!context.Reviews.Any())
         {
-            var kiet = context.Users.FirstOrDefault(u => u.Username == "kietho");
+            var kiet = context.Users.FirstOrDefault(u => u.Email == "kietho@gmail.com");
             var place = context.Places.FirstOrDefault(p => p.Id == 1);
 
             if (kiet != null && place != null)

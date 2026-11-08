@@ -93,9 +93,10 @@ public class AdminController : ControllerBase
             .Select(u => new AdminUserDto
             {
                 Id = u.Id,
-                Username = u.Username,
+                Email = u.Email,
                 Fullname = u.Fullname,
                 AvatarUrl = u.AvatarUrl,
+                Role = u.Role,
                 CreatedAt = u.CreatedAt,
                 TotalReviews = u.Reviews.Count,
                 TotalFavorites = u.Favorites.Count
@@ -107,7 +108,7 @@ public class AdminController : ControllerBase
             var kw = tuKhoa.Trim();
             users = users
                 .Where(u =>
-                    u.Username.Contains(kw, StringComparison.OrdinalIgnoreCase) ||
+                    u.Email.Contains(kw, StringComparison.OrdinalIgnoreCase) ||
                     u.Fullname.Contains(kw, StringComparison.OrdinalIgnoreCase))
                 .ToList();
         }
@@ -122,13 +123,13 @@ public class AdminController : ControllerBase
         if (user == null)
             return NotFound(new { message = $"Không tìm thấy người dùng với mã {id}" });
 
-        if (user.Username.Equals("admin", StringComparison.OrdinalIgnoreCase))
-            return BadRequest(new { message = "Không được phép xóa tài khoản Quản trị viên tối cao (admin)" });
+        if (user.Role.Equals("Admin", StringComparison.OrdinalIgnoreCase))
+            return BadRequest(new { message = "Không được phép xóa tài khoản có quyền Quản trị viên (Admin)" });
 
         _context.Users.Remove(user);
         await _context.SaveChangesAsync();
 
-        return Ok(new { message = $"Đã xóa người dùng '{user.Username}' thành công" });
+        return Ok(new { message = $"Đã xóa người dùng '{user.Email}' thành công" });
     }
 
     [HttpGet("reviews")]
@@ -161,7 +162,7 @@ public class AdminController : ControllerBase
                 PlaceId = r.PlaceId,
                 PlaceName = r.Place != null ? r.Place.Name : "Địa điểm đã xóa",
                 UserId = r.UserId,
-                Username = r.User != null ? r.User.Username : "ẩn_danh",
+                UserEmail = r.User != null ? r.User.Email : "ẩn_danh",
                 UserFullname = r.User != null ? r.User.Fullname : "Ẩn danh",
                 Rating = r.Rating,
                 Comment = r.Comment,

@@ -11,8 +11,8 @@ using TravelGuide.Api.Data;
 namespace TravelGuide.Api.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20261025124320_SeedPlaces")]
-    partial class SeedPlaces
+    [Migration("20261108153823_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -161,7 +161,7 @@ namespace TravelGuide.Api.Migrations
                             Address = "Quận Hoàn Kiếm, TP. Hà Nội",
                             CategoryId = 3,
                             Description = "Trái tim của thủ đô Hà Nội, gắn liền với truyền thuyết vua Lê Lợi trả gươm báu.",
-                            ImageUrl = "https://images.unsplash.com/photo-1509042239860-f550ce710b93",
+                            ImageUrl = "ho-hoan-kiem.jpg",
                             Latitude = 21.028700000000001,
                             Longitude = 105.8523,
                             Name = "Hồ Hoàn Kiếm và Đền Ngọc Sơn",
@@ -175,7 +175,7 @@ namespace TravelGuide.Api.Migrations
                             Address = "Phường Bến Thành, Quận 1, TP. Hồ Chí Minh",
                             CategoryId = 2,
                             Description = "Biểu tượng giao thương lâu đời với khu ẩm thực đêm sầm uất.",
-                            ImageUrl = "https://images.unsplash.com/photo-1583417319070-4a69db38a482",
+                            ImageUrl = "cho-ben-thanh.jpg",
                             Latitude = 10.772500000000001,
                             Longitude = 106.69799999999999,
                             Name = "Chợ Bến Thành",
@@ -189,7 +189,7 @@ namespace TravelGuide.Api.Migrations
                             Address = "Đường Trần Quốc Toản, Phường 10, TP. Đà Lạt",
                             CategoryId = 4,
                             Description = "Công trình kiến trúc nụ hoa Atiso và hoa Dã Quỳ khổng lồ bên hồ Xuân Hương.",
-                            ImageUrl = "https://images.unsplash.com/photo-1544644181-1484b3fdfc62",
+                            ImageUrl = "quang-truong-lam-vien.webp",
                             Latitude = 11.9366,
                             Longitude = 108.4449,
                             Name = "Quảng trường Lâm Viên",
@@ -250,7 +250,7 @@ namespace TravelGuide.Api.Migrations
                             Id = 4,
                             BannerUrl = "https://example.com/dalat.jpg",
                             Name = "Lâm Đồng",
-                            Region = "Tây Nguyên"
+                            Region = "Trung"
                         });
                 });
 
@@ -298,24 +298,24 @@ namespace TravelGuide.Api.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("Fullname")
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("PasswordHash")
+                    b.Property<string>("Role")
                         .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Username")
-                        .IsRequired()
-                        .HasMaxLength(50)
+                        .HasMaxLength(20)
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("Username")
+                    b.HasIndex("Email")
                         .IsUnique();
 
                     b.ToTable("Users");

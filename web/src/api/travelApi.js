@@ -4,13 +4,8 @@ import apiClient from './apiClient';
 const unwrap = (res) => (res && res.data !== undefined ? res.data : res);
 
 export const travelApi = {
-  // 1. Xác thực (Auth)
-  login: async (username, password) => {
-    const res = await apiClient.post('/Auth/login', { username, password });
-    return unwrap(res);
-  },
-  register: async (username, password, fullname) => {
-    const res = await apiClient.post('/Auth/register', { username, password, fullname });
+  loginWithGoogle: async (idToken) => {
+    const res = await apiClient.post('/Auth/google', { idToken });
     return unwrap(res);
   },
 
