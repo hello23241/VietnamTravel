@@ -246,7 +246,7 @@ export default function DetailScreen({ route, navigation }) {
             reviews.map((rev) => (
               <View key={rev.id} style={styles.reviewItem}>
                 <View style={styles.reviewHeader}>
-                  <Text style={styles.reviewAuthor}>{rev.userFullname || rev.username}</Text>
+                  <Text style={styles.reviewAuthor}>{rev.userFullname || rev.userEmail}</Text>
                   <Text style={styles.reviewStar}>{'★'.repeat(rev.rating)}{'☆'.repeat(5 - rev.rating)}</Text>
                 </View>
                 <Text style={styles.reviewComment}>{rev.comment}</Text>

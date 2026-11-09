@@ -1,8 +1,8 @@
 {
   "info": {
-    "_postman_id": "c9f8e7d6-5b4a-4c3d-8e2f-1a2b3c4d5e6f",
-    "name": "VietGuide Travel API - Full Test Suite v2 (CDN & 20 Places)",
-    "description": "Bộ kịch bản kiểm thử tự động toàn diện v2 cho Backend TravelGuide.Api (.NET 8 + SQLite) - Đã cập nhật kiểm thử nội suy link ảnh GitHub jsDelivr CDN, 15 tỉnh thành, 20 địa điểm, IMemoryCache thời tiết và đầy đủ Admin CRUD.",
+    "_postman_id": "d1e2f3a4-b5c6-4d7e-8f9a-0b1c2d3e4f5a",
+    "name": "VietGuide Travel API - Full Test Suite v3 (Google OAuth, CDN & Full CRUD)",
+    "description": "Bộ kịch bản kiểm thử tự động toàn diện v3 (33 kịch bản) cho Backend TravelGuide.Api (.NET 8 + SQLite) - Tương thích hoàn toàn với mô hình User (Email/Role), Google OAuth, phân quyền tên miền @dntu.edu.vn, nội suy ảnh CDN jsDelivr, Cache thời tiết và trọn bộ CRUD Admin.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -13,7 +13,17 @@
     },
     {
       "key": "testUserId",
-      "value": "2",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "testUsername",
+      "value": "nhankiet1705@gmail.com",
+      "type": "string"
+    },
+    {
+      "key": "adminUserId",
+      "value": "1",
       "type": "string"
     },
     {
@@ -39,22 +49,17 @@
   ],
   "item": [
     {
-      "name": "1. Auth (Xác thực & Tài khoản)",
+      "name": "1. Auth (Google OAuth 2.0, DNTU Role & Mobile Auth)",
       "item": [
         {
-          "name": "1.1 Đăng nhập Admin (Hợp lệ - 200 OK)",
+          "name": "1.1 Google Login: Bỏ trống IdToken (400 Bad Request)",
           "event": [
             {
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test('Status code is 200 OK', function () {",
-                  "    pm.response.to.have.status(200);",
-                  "});",
-                  "pm.test('Trả về đúng username admin và ẩn PasswordHash', function () {",
-                  "    var jsonData = pm.response.json();",
-                  "    pm.expect(jsonData.username).to.eql('admin');",
-                  "    pm.expect(jsonData).to.not.have.property('passwordHash');",
+                  "pm.test('Status code is 400 Bad Request khi thiếu IdToken', function () {",
+                  "    pm.response.to.have.status(400);",
                   "});"
                 ],
                 "type": "text/javascript"
@@ -71,7 +76,244 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"username\": \"admin\",\n  \"password\": \"admin123\"\n}"
+              "raw": "{\n  \"idToken\": \"\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/Auth/google",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "Auth",
+                "google"
+              ]
+            }
+          }
+        },
+        {
+          "name": "1.2 Google Login: IdToken giả mạo/không hợp lệ (401 Unauthorized)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 401 Unauthorized khi IdToken không hợp lệ', function () {",
+                  "    pm.response.to.have.status(401);",
+                  "});",
+                  "pm.test('Trả về thông báo lỗi xác thực Google rõ ràng', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('message');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idToken\": \"eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.fake_payload.fake_signature\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/Auth/google",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "Auth",
+                "google"
+              ]
+            }
+          }
+        },
+        {
+          "name": "1.3 Khởi tạo tài khoản Admin DNTU (admin@dntu.edu.vn -> Role Admin)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Khởi tạo hoặc xác nhận tài khoản Admin DNTU tồn tại (201 hoặc 400)', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([201, 400]);",
+                  "});",
+                  "if (pm.response.code === 201) {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.collectionVariables.set('adminUserId', jsonData.id);",
+                  "    pm.test('Tự động cấp quyền Admin cho tên miền @dntu.edu.vn', function () {",
+                  "        pm.expect(jsonData.role).to.eql('Admin');",
+                  "        pm.expect(jsonData.email).to.eql('admin@dntu.edu.vn');",
+                  "    });",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"admin@dntu.edu.vn\",\n  \"password\": \"adminpassword\",\n  \"fullname\": \"Quản Trị Viên DNTU\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/Auth/register",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "Auth",
+                "register"
+              ]
+            }
+          }
+        },
+        {
+          "name": "1.4 Chặn đăng ký trùng Email 'admin@dntu.edu.vn' (400 Bad Request)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 400 Bad Request khi trùng Email', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"admin@dntu.edu.vn\",\n  \"password\": \"adminpassword\",\n  \"fullname\": \"Trùng Admin DNTU\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/Auth/register",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "Auth",
+                "register"
+              ]
+            }
+          }
+        },
+        {
+          "name": "1.5 Đăng ký tài khoản Du khách mới cho Mobile (201 Created -> Role User)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "var rand = Math.floor(Math.random() * 900000) + 100000;",
+                  "pm.collectionVariables.set('testUsername', 'dukhach_' + rand);"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 201 Created', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData && jsonData.id) {",
+                  "    pm.collectionVariables.set('testUserId', jsonData.id);",
+                  "}",
+                  "pm.test('Trả về đúng Email, Role = User và AvatarUrl mặc định', function () {",
+                  "    pm.expect(jsonData).to.have.property('email');",
+                  "    pm.expect(jsonData.role).to.eql('User');",
+                  "    pm.expect(jsonData.avatarUrl).to.include('https://ui-avatars.com/api/');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"{{testUsername}}\",\n  \"password\": \"matkhau123\",\n  \"fullname\": \"Du Khách Thử Nghiệm\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/Auth/register",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "Auth",
+                "register"
+              ]
+            }
+          }
+        },
+        {
+          "name": "1.6 Đăng nhập Mobile hợp lệ (200 OK)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200 OK', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Trả về đúng cấu trúc UserResponseDto (id, email, fullname, role)', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('id');",
+                  "    pm.expect(jsonData).to.have.property('email');",
+                  "    pm.expect(jsonData).to.have.property('role');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"{{testUsername}}\",\n  \"password\": \"matkhau123\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/api/Auth/login",
@@ -87,7 +329,7 @@
           }
         },
         {
-          "name": "1.2 Đăng nhập Sai mật khẩu (401 Unauthorized)",
+          "name": "1.7 Đăng nhập tài khoản không tồn tại (401 Unauthorized)",
           "event": [
             {
               "listen": "test",
@@ -111,7 +353,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"username\": \"admin\",\n  \"password\": \"saimatkhau123\"\n}"
+              "raw": "{\n  \"username\": \"khong_ton_tai_999999@gmail.com\",\n  \"password\": \"saimatkhau123\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/api/Auth/login",
@@ -122,93 +364,6 @@
                 "api",
                 "Auth",
                 "login"
-              ]
-            }
-          }
-        },
-        {
-          "name": "1.3 Đăng ký tài khoản mới (201 Created)",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('Status code is 201 Created', function () {",
-                  "    pm.response.to.have.status(201);",
-                  "});",
-                  "var jsonData = pm.response.json();",
-                  "if (jsonData && jsonData.id) {",
-                  "    pm.collectionVariables.set('testUserId', jsonData.id);",
-                  "}",
-                  "pm.test('Tự động tạo AvatarUrl mặc định khi bỏ trống', function () {",
-                  "    pm.expect(jsonData.avatarUrl).to.include('https://ui-avatars.com/api/');",
-                  "});"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"username\": \"dukhach_{{$randomInt}}\",\n  \"password\": \"matkhau123\",\n  \"fullname\": \"Du Khách Thử Nghiệm\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/Auth/register",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "Auth",
-                "register"
-              ]
-            }
-          }
-        },
-        {
-          "name": "1.4 Đăng ký trùng Username 'admin' (400 Bad Request)",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('Status code is 400 Bad Request', function () {",
-                  "    pm.response.to.have.status(400);",
-                  "});"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"username\": \"admin\",\n  \"password\": \"password123\",\n  \"fullname\": \"Trùng Admin\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/Auth/register",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "Auth",
-                "register"
               ]
             }
           }
@@ -413,7 +568,7 @@
                   "});",
                   "pm.test('Mọi địa điểm đều có ImageUrl bắt đầu bằng http/https (Đã nối CDN)', function () {",
                   "    var jsonData = pm.response.json();",
-                  "    pm.expect(jsonData.items.length).to.be.above(0);",
+                  "    pm.expect(jsonData.items.length).to.be.at.least(20);",
                   "    jsonData.items.forEach(function(item) {",
                   "        pm.expect(item.imageUrl).to.match(/^https?:\\/\\//i);",
                   "    });",
@@ -600,7 +755,38 @@
           }
         },
         {
-          "name": "3.6 Lấy thời tiết Địa điểm ID=1 (Kiểm tra Cache / Fallback - 200 OK)",
+          "name": "3.6 Xem Địa điểm không tồn tại ID=9999 (404 Not Found)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 404 Not Found', function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/Places/9999",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "Places",
+                "9999"
+              ]
+            }
+          }
+        },
+        {
+          "name": "3.7 Lấy thời tiết Địa điểm ID=1 (Kiểm tra Cache / Fallback - 200 OK)",
           "event": [
             {
               "listen": "test",
@@ -638,7 +824,7 @@
           }
         },
         {
-          "name": "3.7 Tạo mới Địa điểm bỏ trống ImageUrl (Tự gán ảnh Unsplash mặc định - 201 Created)",
+          "name": "3.8 Tạo mới Địa điểm bỏ trống ImageUrl (Tự gán ảnh Unsplash mặc định - 201 Created)",
           "event": [
             {
               "listen": "test",
@@ -684,7 +870,7 @@
           }
         },
         {
-          "name": "3.8 Cập nhật Địa điểm nhập slug ảnh 'vinh-ha-long.webp' & không gửi BookingUrl (200 OK)",
+          "name": "3.9 Cập nhật Địa điểm nhập slug ảnh 'vinh-ha-long.webp' & không gửi BookingUrl (200 OK)",
           "event": [
             {
               "listen": "test",
@@ -724,7 +910,7 @@
           }
         },
         {
-          "name": "3.9 Kiểm tra Địa điểm sau cập nhật: Có link jsDelivr CDN & giữ nguyên BookingUrl (200 OK)",
+          "name": "3.10 Kiểm tra Địa điểm sau cập nhật: Có link jsDelivr CDN & giữ nguyên BookingUrl (200 OK)",
           "event": [
             {
               "listen": "test",
@@ -846,7 +1032,7 @@
           }
         },
         {
-          "name": "4.3 Gửi đánh giá mới (201 Created)",
+          "name": "4.3 Gửi đánh giá mới (201 Created -> Kiểm tra UserEmail)",
           "event": [
             {
               "listen": "test",
@@ -858,7 +1044,11 @@
                   "var jsonData = pm.response.json();",
                   "if (jsonData && jsonData.id) {",
                   "    pm.collectionVariables.set('createdReviewId', jsonData.id);",
-                  "}"
+                  "}",
+                  "pm.test('ReviewResponseDto trả về đúng userEmail và userFullname', function () {",
+                  "    pm.expect(jsonData).to.have.property('userEmail');",
+                  "    pm.expect(jsonData).to.have.property('userFullname');",
+                  "});"
                 ],
                 "type": "text/javascript"
               }
@@ -889,7 +1079,48 @@
           }
         },
         {
-          "name": "4.4 Gửi đánh giá sai số sao Rating=10 (400 Bad Request)",
+          "name": "4.4 Lấy danh sách Đánh giá theo Địa điểm (200 OK)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200 OK', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Danh sách đánh giá có chứa bình luận vừa gửi', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.length).to.be.above(0);",
+                  "    pm.expect(jsonData[0]).to.have.property('userEmail');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/Reviews?placeId={{createdPlaceId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "Reviews"
+              ],
+              "query": [
+                {
+                  "key": "placeId",
+                  "value": "{{createdPlaceId}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "4.5 Gửi đánh giá sai số sao Rating=10 (400 Bad Request)",
           "event": [
             {
               "listen": "test",
@@ -930,7 +1161,7 @@
       ]
     },
     {
-      "name": "5. Admin Portal (Quản trị, Kiểm duyệt & Dọn dẹp)",
+      "name": "5. Admin Portal (Quản trị, Kiểm duyệt, CRUD Tỉnh/Danh mục & Dọn dẹp)",
       "item": [
         {
           "name": "5.1 Thống kê tổng quan Dashboard (200 OK)",
@@ -1000,7 +1231,7 @@
           }
         },
         {
-          "name": "5.3 Tìm kiếm người dùng tiếng Việt 'kiệt' (200 OK)",
+          "name": "5.3 Tìm kiếm người dùng & Trích xuất ID Admin DNTU (200 OK)",
           "event": [
             {
               "listen": "test",
@@ -1009,10 +1240,16 @@
                   "pm.test('Status code is 200 OK', function () {",
                   "    pm.response.to.have.status(200);",
                   "});",
-                  "pm.test('Tìm thấy Hồ Nhân Kiệt', function () {",
-                  "    var jsonData = pm.response.json();",
+                  "var jsonData = pm.response.json();",
+                  "pm.test('Danh sách người dùng có chứa email và role', function () {",
                   "    pm.expect(jsonData.length).to.be.above(0);",
-                  "});"
+                  "    pm.expect(jsonData[0]).to.have.property('email');",
+                  "    pm.expect(jsonData[0]).to.have.property('role');",
+                  "});",
+                  "var adminUser = jsonData.find(u => u.role === 'Admin');",
+                  "if (adminUser) {",
+                  "    pm.collectionVariables.set('adminUserId', adminUser.id);",
+                  "}"
                 ],
                 "type": "text/javascript"
               }
@@ -1022,7 +1259,7 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/Admin/users?tuKhoa=kiệt",
+              "raw": "{{baseUrl}}/api/Admin/users",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -1030,24 +1267,18 @@
                 "api",
                 "Admin",
                 "users"
-              ],
-              "query": [
-                {
-                  "key": "tuKhoa",
-                  "value": "kiệt"
-                }
               ]
             }
           }
         },
         {
-          "name": "5.4 Chặn xóa tài khoản Admin tối cao ID=1 (400 Bad Request)",
+          "name": "5.4 Chặn xóa tài khoản có quyền Admin DNTU (400 Bad Request)",
           "event": [
             {
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test('Status code is 400 Bad Request', function () {",
+                  "pm.test('Status code is 400 Bad Request khi cố xóa tài khoản Role Admin', function () {",
                   "    pm.response.to.have.status(400);",
                   "});"
                 ],
@@ -1059,7 +1290,7 @@
             "method": "DELETE",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/Admin/users/1",
+              "raw": "{{baseUrl}}/api/Admin/users/{{adminUserId}}",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -1067,45 +1298,13 @@
                 "api",
                 "Admin",
                 "users",
-                "1"
+                "{{adminUserId}}"
               ]
             }
           }
         },
         {
-          "name": "5.5 Chặn xóa Tỉnh thành đang có Địa điểm ID=1 (400 Bad Request)",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('Status code is 400 Bad Request', function () {",
-                  "    pm.response.to.have.status(400);",
-                  "});"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
-          "request": {
-            "method": "DELETE",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/api/Admin/provinces/1",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "Admin",
-                "provinces",
-                "1"
-              ]
-            }
-          }
-        },
-        {
-          "name": "5.6 Lọc danh sách Đánh giá 1 sao (Spam Filter - 200 OK)",
+          "name": "5.5 Lọc danh sách Đánh giá 1 sao (Spam Filter - 200 OK)",
           "event": [
             {
               "listen": "test",
@@ -1114,7 +1313,7 @@
                   "pm.test('Status code is 200 OK', function () {",
                   "    pm.response.to.have.status(200);",
                   "});",
-                  "pm.test('Trả về cấu trúc phân trang hợp lệ', function () {",
+                  "pm.test('Trả về cấu trúc phân trang hợp lệ kèm userEmail', function () {",
                   "    var jsonData = pm.response.json();",
                   "    pm.expect(jsonData).to.have.property('items');",
                   "});"
@@ -1154,7 +1353,264 @@
           }
         },
         {
-          "name": "5.7 Xóa Đánh giá thử nghiệm vừa tạo & cập nhật lại RatingAvg (200 OK)",
+          "name": "5.6 Thêm Tỉnh thành mới & Kiểm tra trả về DTO (201 Created)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 201 Created', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData && jsonData.province && jsonData.province.id) {",
+                  "    pm.collectionVariables.set('createdProvinceId', jsonData.province.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Tỉnh Thử Nghiệm Postman\",\n  \"region\": \"Nam\",\n  \"bannerUrl\": \"https://example.com/test.jpg\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/Admin/provinces",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "Admin",
+                "provinces"
+              ]
+            }
+          }
+        },
+        {
+          "name": "5.7 Cập nhật Tỉnh thành vừa tạo (200 OK)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200 OK', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Tỉnh Thử Nghiệm (Đã Sửa)\",\n  \"region\": \"Trung\",\n  \"bannerUrl\": \"https://example.com/test-updated.jpg\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/Admin/provinces/{{createdProvinceId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "Admin",
+                "provinces",
+                "{{createdProvinceId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "5.8 Chặn xóa Tỉnh thành đang có Địa điểm ID=1 (400 Bad Request)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 400 Bad Request', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/Admin/provinces/1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "Admin",
+                "provinces",
+                "1"
+              ]
+            }
+          }
+        },
+        {
+          "name": "5.9 Xóa Tỉnh thành rỗng vừa tạo (200 OK)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200 OK', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/Admin/provinces/{{createdProvinceId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "Admin",
+                "provinces",
+                "{{createdProvinceId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "5.10 Thêm Danh mục mới & Kiểm tra trả về DTO (201 Created)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 201 Created', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData && jsonData.category && jsonData.category.id) {",
+                  "    pm.collectionVariables.set('createdCategoryId', jsonData.category.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Danh Mục Thử Nghiệm\",\n  \"iconUrl\": \"compass\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/Admin/categories",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "Admin",
+                "categories"
+              ]
+            }
+          }
+        },
+        {
+          "name": "5.11 Chặn xóa Danh mục đang có Địa điểm ID=1 (400 Bad Request)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 400 Bad Request', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/Admin/categories/1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "Admin",
+                "categories",
+                "1"
+              ]
+            }
+          }
+        },
+        {
+          "name": "5.12 Xóa Danh mục rỗng vừa tạo (200 OK)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200 OK', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/Admin/categories/{{createdCategoryId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "Admin",
+                "categories",
+                "{{createdCategoryId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "5.13 Xóa Đánh giá thử nghiệm vừa tạo & cập nhật lại RatingAvg (200 OK)",
           "event": [
             {
               "listen": "test",
@@ -1186,7 +1642,7 @@
           }
         },
         {
-          "name": "5.8 Dọn dẹp: Xóa Địa điểm thử nghiệm vừa tạo (204 No Content)",
+          "name": "5.14 Dọn dẹp: Xóa Địa điểm thử nghiệm vừa tạo (204 No Content)",
           "event": [
             {
               "listen": "test",
@@ -1217,7 +1673,7 @@
           }
         },
         {
-          "name": "5.9 Dọn dẹp: Xóa Tài khoản thử nghiệm vừa tạo (200 OK)",
+          "name": "5.15 Dọn dẹp: Xóa Tài khoản du khách thử nghiệm vừa tạo (200 OK)",
           "event": [
             {
               "listen": "test",

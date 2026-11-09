@@ -666,7 +666,6 @@ export default function HomePage() {
       <footer className="bg-slate-950 text-slate-400 py-12 border-t border-slate-800 text-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="flex items-center gap-3">
-            <div className="flex items-center gap-3">
             <img
               src="/icon.png"
               onError={(e) => {
@@ -675,11 +674,6 @@ export default function HomePage() {
               alt="VietGuide Logo"
               className="w-10 h-10 rounded-xl object-contain bg-white p-0.5"
             />
-            <div>
-              <span className="font-bold text-white text-base">VietGuide Travel</span>
-              <p className="text-xs text-slate-500">Cẩm Nang Hướng Dẫn Du Lịch Khám Phá Việt Nam</p>
-            </div>
-          </div>
             <div>
               <span className="font-bold text-white text-base">VietGuide Travel</span>
               <p className="text-xs text-slate-500">Cẩm Nang Hướng Dẫn Du Lịch Khám Phá Việt Nam</p>

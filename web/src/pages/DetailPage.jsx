@@ -434,7 +434,7 @@ export default function DetailPage() {
 
                 <div className="flex justify-between items-center">
                   <span className="text-[11px] text-slate-400">
-                    {currentUser ? `Đang nhận xét với tên: ${currentUser.fullname || currentUser.username}` : 'Chưa đăng nhập'}
+                    {currentUser ? `Đang nhận xét với tên: ${currentUser.fullname || currentUser.email}` : 'Chưa đăng nhập'}
                   </span>
                   <button
                     type="submit"
@@ -459,9 +459,9 @@ export default function DetailPage() {
                       <div className="flex items-center justify-between mb-1.5">
                         <div className="flex items-center gap-2">
                           <div className="w-7 h-7 rounded-full bg-emerald-600 text-white font-bold flex items-center justify-center text-[11px]">
-                            {(rev.userFullname || rev.username || 'U').charAt(0).toUpperCase()}
+                            {(rev.userFullname || rev.userEmail || 'U').charAt(0).toUpperCase()}
                           </div>
-                          <span className="font-extrabold text-slate-800">{rev.userFullname || rev.username}</span>
+                          <span className="font-extrabold text-slate-800">{rev.userFullname || rev.userEmail}</span>
                         </div>
                         <span className="text-amber-500 font-bold">
                           {'★'.repeat(rev.rating)}{'☆'.repeat(5 - rev.rating)}
