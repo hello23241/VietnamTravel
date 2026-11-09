@@ -77,7 +77,7 @@ function CustomSelect({ label, value, options, onChange, placeholder, theme = 'e
 
 export default function AdminPage() {
   const [currentUser, setCurrentUser] = useState(null);
-  const [activeTab, setActiveTab] = useState('dashboard'); // 'dashboard' | 'places' | 'users' | 'reviews' | 'metadata'
+  const [activeTab, setActiveTab] = useState('dashboard');
   const [loading, setLoading] = useState(true);
 
   // 1. Dữ liệu Dashboard & Biểu đồ
@@ -110,7 +110,7 @@ export default function AdminPage() {
   const [loadingReviews, setLoadingReviews] = useState(false);
 
   // 5. Dữ liệu Tỉnh thành & Danh mục
-  const [metaSubTab, setMetaSubTab] = useState('provinces'); // 'provinces' | 'categories'
+  const [metaSubTab, setMetaSubTab] = useState('provinces');
   const [provinceName, setProvinceName] = useState('');
   const [provinceRegion, setProvinceRegion] = useState('Bắc');
   const [editingProvince, setEditingProvince] = useState(null);
@@ -127,14 +127,14 @@ export default function AdminPage() {
       return;
     }
     const user = JSON.parse(userStr);
-    // Kiểm tra quyền Admin theo Role hoặc Email cấu hình
-    const isAdminUser =
-      user.role === 'Admin' ||
-      user.email === 'admin@vietguide.com' ||
-      user.username === 'admin';
+    const userEmail = user.email?.toLowerCase().trim() || '';
+    const isDntuEmail = userEmail.endsWith('@dntu.edu.vn') || userEmail.endsWith('.dntu.edu.vn');
+    
+    // Chỉ cấp quyền khi tài khoản có Role Admin hoặc email có đuôi dntu.edu.vn
+    const isAdminUser = user.role === 'Admin' || isDntuEmail;
 
     if (!isAdminUser) {
-      alert('Chỉ tài khoản Quản trị viên (Admin) mới có quyền truy cập trang này!');
+      alert('Chỉ tài khoản trường DNTU (@...dntu.edu.vn) mới có quyền truy cập trang quản trị!');
       navigate('/');
       return;
     }
@@ -226,16 +226,17 @@ export default function AdminPage() {
   };
 
   const handleDeleteUser = async (user) => {
+    const uEmail = user.email?.toLowerCase().trim() || '';
     const isSuperAdmin =
       user.role === 'Admin' ||
-      user.email === 'admin@vietguide.com' ||
-      user.username === 'admin';
+      uEmail.endsWith('@dntu.edu.vn') ||
+      uEmail.endsWith('.dntu.edu.vn');
 
     if (isSuperAdmin) {
-      alert('Không thể xóa tài khoản có quyền Quản trị viên (Admin)!');
+      alert('Không thể xóa tài khoản có quyền Quản trị viên (Admin DNTU)!');
       return;
     }
-    const displayName = user.email || user.username || user.fullname;
+    const displayName = user.email || user.fullname || 'Người dùng';
     if (!window.confirm(`Bạn có chắc chắn muốn xóa vĩnh viễn tài khoản "${displayName}"?`)) return;
 
     try {
@@ -245,6 +246,19 @@ export default function AdminPage() {
       loadDashboardData();
     } catch (err) {
       alert(err.message || 'Lỗi khi xóa người dùng');
+    }
+  };
+
+  const handleDeleteReview = async (reviewId) => {
+    if (!window.confirm('Bạn có chắc muốn xóa nhận xét vi phạm này?')) return;
+    try {
+      await adminApi.deleteReview(reviewId);
+      alert('Đã xóa đánh giá vi phạm và cân bằng lại điểm trung bình địa điểm!');
+      loadReviewsData(reviewPage, reviewRatingFilter);
+      loadDashboardData();
+      loadPlacesData();
+    } catch (err) {
+      alert(err.message || 'Lỗi khi xóa đánh giá');
     }
   };
 
@@ -399,7 +413,7 @@ export default function AdminPage() {
             <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Quyền Quản Trị Viên</span>
             <span className="text-xs font-black text-emerald-400 flex items-center gap-1.5">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
-              {currentUser?.email || currentUser?.username} ({currentUser?.fullname})
+              {currentUser?.email} ({currentUser?.fullname})
             </span>
           </div>
         </div>
@@ -739,7 +753,7 @@ export default function AdminPage() {
                     <thead className="bg-slate-50 border-b border-slate-100 text-[11px] font-bold uppercase tracking-wider text-slate-400">
                       <tr>
                         <th className="py-3.5 px-5">Thành viên</th>
-                        <th className="py-3.5 px-4">Email / Tài khoản</th>
+                        <th className="py-3.5 px-4">Email</th>
                         <th className="py-3.5 px-4">Ngày đăng ký</th>
                         <th className="py-3.5 px-4">Đóng góp</th>
                         <th className="py-3.5 px-4">Vai trò</th>
@@ -748,10 +762,11 @@ export default function AdminPage() {
                     </thead>
                     <tbody className="divide-y divide-slate-100">
                       {users.map((u) => {
+                        const uEmail = u.email?.toLowerCase().trim() || '';
                         const isSuperAdmin =
                           u.role === 'Admin' ||
-                          u.email === 'admin@vietguide.com' ||
-                          u.username === 'admin';
+                          uEmail.endsWith('@dntu.edu.vn') ||
+                          uEmail.endsWith('.dntu.edu.vn');
 
                         return (
                           <tr key={u.id} className="hover:bg-slate-50/70 transition-colors">
@@ -768,7 +783,7 @@ export default function AdminPage() {
                                 </div>
                               </div>
                             </td>
-                            <td className="py-3.5 px-4 font-semibold text-slate-700">{u.email || `@${u.username}`}</td>
+                            <td className="py-3.5 px-4 font-semibold text-slate-700">{u.email}</td>
                             <td className="py-3.5 px-4 text-slate-500">
                               {u.createdAt ? new Date(u.createdAt).toLocaleDateString('vi-VN') : 'Mới tạo'}
                             </td>
@@ -783,7 +798,7 @@ export default function AdminPage() {
                               <span className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase ${
                                 isSuperAdmin ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-600'
                               }`}>
-                                {isSuperAdmin ? 'Quản trị viên' : 'Thành viên'}
+                                {isSuperAdmin ? 'Quản trị viên (DNTU)' : 'Thành viên'}
                               </span>
                             </td>
                             <td className="py-3.5 px-5 text-right">
@@ -870,7 +885,7 @@ export default function AdminPage() {
                     <div key={rev.id} className="p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-slate-50/60 transition-colors">
                       <div className="space-y-1.5 flex-1">
                         <div className="flex flex-wrap items-center gap-2.5">
-                          <span className="text-xs font-black text-slate-900">{rev.userFullname || rev.userEmail || rev.username}</span>
+                          <span className="text-xs font-black text-slate-900">{rev.userFullname || rev.userEmail || 'Ẩn danh'}</span>
                           <span className="text-amber-500 font-bold text-xs flex items-center gap-1">
                             <i className="fa-solid fa-star"></i> {rev.rating} sao
                           </span>

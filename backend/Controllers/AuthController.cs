@@ -32,7 +32,6 @@ public class AuthController : ControllerBase
             // 1. Xác thực ID Token trực tiếp với máy chủ Google
             var validationSettings = new GoogleJsonWebSignature.ValidationSettings
             {
-                // Nếu muốn kiểm tra chặt chẽ Client ID thì cấu hình, hoặc để trống nếu dùng đa nền tảng Web + Mobile
                 Audience = !string.IsNullOrWhiteSpace(_configuration["GoogleAuth:ClientId"]) 
                     ? new[] { _configuration["GoogleAuth:ClientId"] } 
                     : null
@@ -47,7 +46,9 @@ public class AuthController : ControllerBase
 
         var email = payload.Email.ToLower().Trim();
 
-        var isAdminDomain = email.EndsWith("@dntu.edu.vn", StringComparison.OrdinalIgnoreCase);
+        // 2. Chỉ cấp quyền Admin duy nhất cho tài khoản thuộc tên miền dntu.edu.vn (hỗ trợ cả @dntu.edu.vn và @st.dntu.edu.vn)
+        var isAdminDomain = email.EndsWith("@dntu.edu.vn", StringComparison.OrdinalIgnoreCase) ||
+                            email.EndsWith(".dntu.edu.vn", StringComparison.OrdinalIgnoreCase);
         var role = isAdminDomain ? "Admin" : "User";
 
         // 3. Tìm user trong cơ sở dữ liệu theo email

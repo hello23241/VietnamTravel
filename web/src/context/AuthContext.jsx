@@ -24,17 +24,19 @@ export function AuthProvider({ children }) {
     localStorage.removeItem('user');
   };
 
+  // Kiểm tra tên miền email trường DNTU (nhận diện cả @dntu.edu.vn và các subdomain như @st.dntu.edu.vn)
+  const userEmail = currentUser?.email?.toLowerCase().trim() || '';
+  const isDntuEmail =
+    userEmail.endsWith('@dntu.edu.vn') || userEmail.endsWith('.dntu.edu.vn');
+
   return (
     <AuthContext.Provider
       value={{
         currentUser,
         login,
         logout,
-        // Xác định quyền Admin theo Role trả về từ backend Google OAuth
-        isAdmin:
-          currentUser?.role === 'Admin' ||
-          currentUser?.email === 'admin@vietguide.com' ||
-          currentUser?.username === 'admin',
+        // Chỉ duy nhất tài khoản có role Admin hoặc có email đuôi dntu.edu.vn mới được xem là Admin
+        isAdmin: currentUser?.role === 'Admin' || isDntuEmail,
       }}
     >
       {children}
