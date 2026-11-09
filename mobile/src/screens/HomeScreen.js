@@ -117,11 +117,17 @@ export default function HomeScreen({ navigation }) {
 
       {/* Header */}
       <View style={styles.header}>
-        <View>
-          <Text style={styles.appName}>VietGuide</Text>
-          <Text style={styles.welcomeText}>
-            Xin chào, <Text style={styles.userName}>{currentUser ? currentUser.fullname : 'Khách du lịch'}</Text> 👋
-          </Text>
+        <View style={styles.brandRow}>
+          <Image
+            source={require('../../assets/icon.png')}
+            style={styles.headerLogo}
+          />
+          <View>
+            <Text style={styles.appName}>VietGuide</Text>
+            <Text style={styles.welcomeText}>
+              Xin chào, <Text style={styles.userName}>{currentUser ? currentUser.fullname : 'Khách du lịch'}</Text> 👋
+            </Text>
+          </View>
         </View>
 
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
@@ -320,6 +326,8 @@ export default function HomeScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f8fafc', paddingTop: 10 },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 12, backgroundColor: '#ffffff' },
+  brandRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  headerLogo: { width: 42, height: 42, borderRadius: 10, backgroundColor: '#ffffff', borderWidth: 1, borderColor: '#e2e8f0' },
   appName: { fontSize: 13, fontWeight: '800', color: '#059669', textTransform: 'uppercase', letterSpacing: 1 },
   welcomeText: { fontSize: 15, color: '#334155' },
   userName: { fontWeight: '700', color: '#0f172a' },

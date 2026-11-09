@@ -34,9 +34,14 @@ export default function LoginPage() {
       </Link>
 
       <div className="w-full max-w-md bg-white rounded-3xl shadow-xl border border-slate-200/80 p-8 text-center">
-        <div className="w-12 h-12 bg-emerald-600 rounded-2xl flex items-center justify-center text-white mx-auto shadow-lg shadow-emerald-200 mb-3">
-          <Compass className="w-6 h-6 animate-pulse" />
-        </div>
+        <img
+          src="/icon.png"
+          onError={(e) => {
+            e.currentTarget.src = 'https://cdn.jsdelivr.net/gh/hello23241/VietnamTravel@main/images/icon.png';
+          }}
+          alt="VietGuide Logo"
+          className="w-20 h-20 rounded-2xl object-contain bg-white border border-slate-100 p-1 mx-auto shadow-lg shadow-emerald-500/10 mb-3"
+        />
         <h2 className="text-2xl font-black text-slate-900">Đăng Nhập VietGuide</h2>
         <p className="text-xs text-slate-500 mt-1 mb-6">
           Sử dụng tài khoản Google để đồng bộ sổ tay chuyến đi và quyền quản trị

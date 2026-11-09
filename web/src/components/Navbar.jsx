@@ -32,9 +32,14 @@ export default function Navbar() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
         {/* Logo */}
         <Link to="/" className="flex items-center gap-3 group">
-          <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-400 flex items-center justify-center text-white shadow-lg shadow-emerald-500/20 group-hover:scale-105 transition-transform">
-            <i className="fa-solid fa-compass text-xl"></i>
-          </div>
+          <img
+            src="/icon.png"
+            onError={(e) => {
+              e.currentTarget.src = 'https://cdn.jsdelivr.net/gh/hello23241/VietnamTravel@main/images/icon.png';
+            }}
+            alt="VietGuide Logo"
+            className="w-11 h-11 rounded-2xl object-contain bg-white border border-slate-200/80 p-0.5 shadow-md shadow-emerald-500/10 group-hover:scale-105 transition-transform"
+          />
           <div>
             <span className="text-xl font-extrabold tracking-tight bg-gradient-to-r from-emerald-700 to-teal-600 bg-clip-text text-transparent">
               VietGuide

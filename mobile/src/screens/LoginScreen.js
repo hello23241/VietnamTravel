@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import {
   View,
   Text,
+  Image,
   TextInput,
   TouchableOpacity,
   StyleSheet,
@@ -65,9 +66,13 @@ export default function LoginScreen({ navigation }) {
     >
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
-          <Text style={styles.brandTitle}>VietGuide</Text>
-          <Text style={styles.subtitle}>Cẩm Nang Hướng Dẫn Du Lịch Việt Nam</Text>
-        </View>
+        <Image
+          source={require('../../assets/icon.png')}
+          style={styles.logoImage}
+        />
+        <Text style={styles.brandTitle}>VietGuide</Text>
+        <Text style={styles.subtitle}>Cẩm Nang Hướng Dẫn Du Lịch Việt Nam</Text>
+      </View>
 
         <View style={styles.formCard}>
           <View style={styles.tabContainer}>
@@ -164,6 +169,7 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f8fafc' },
   scrollContent: { flexGrow: 1, justifyContent: 'center', padding: 20 },
   header: { alignItems: 'center', marginBottom: 28 },
+  logoImage: { width: 84, height: 84, borderRadius: 20, marginBottom: 10, backgroundColor: '#ffffff', borderWidth: 1, borderColor: '#e2e8f0' },
   brandTitle: { fontSize: 32, fontWeight: '800', color: '#059669', letterSpacing: 0.5 },
   subtitle: { fontSize: 14, color: '#64748b', marginTop: 4 },
   formCard: { backgroundColor: '#ffffff', padding: 22, borderRadius: 20, borderWidth: 1, borderColor: '#e2e8f0', elevation: 3, shadowColor: '#000', shadowOpacity: 0.08, shadowRadius: 10 },
