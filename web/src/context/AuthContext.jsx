@@ -30,7 +30,11 @@ export function AuthProvider({ children }) {
         currentUser,
         login,
         logout,
-        isAdmin: currentUser?.username === 'admin',
+        // Xác định quyền Admin theo Role trả về từ backend Google OAuth
+        isAdmin:
+          currentUser?.role === 'Admin' ||
+          currentUser?.email === 'admin@vietguide.com' ||
+          currentUser?.username === 'admin',
       }}
     >
       {children}

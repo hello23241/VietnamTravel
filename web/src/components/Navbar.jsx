@@ -89,12 +89,28 @@ export default function Navbar() {
                     : 'border-slate-200/80 bg-white hover:bg-slate-50'
                 }`}
               >
-                <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-400 text-white flex items-center justify-center text-sm font-black shadow-sm">
-                  {currentUser.fullname ? currentUser.fullname.charAt(0).toUpperCase() : 'U'}
-                </div>
+                {currentUser.avatarUrl ? (
+                  <img
+                    src={currentUser.avatarUrl}
+                    referrerPolicy="no-referrer"
+                    onError={(e) => {
+                      e.currentTarget.onerror = null;
+                      e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                        currentUser.fullname || 'User'
+                      )}&background=059669&color=fff&bold=true`;
+                    }}
+                    alt={currentUser.fullname || 'Avatar'}
+                    className="w-9 h-9 rounded-xl object-cover border border-emerald-200/80 shadow-sm"
+                  />
+                ) : (
+                  <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-400 text-white flex items-center justify-center text-sm font-black shadow-sm">
+                    {(currentUser.fullname || currentUser.email || 'U').charAt(0).toUpperCase()}
+                  </div>
+                )}
+
                 <div className="text-left hidden sm:block">
                   <div className="text-xs font-black text-slate-800 leading-tight">
-                    {currentUser.fullname || currentUser.username}
+                    {currentUser.fullname || currentUser.email}
                   </div>
                   <div className="text-[10px] font-semibold text-emerald-600 flex items-center gap-1">
                     {isAdmin ? (
@@ -116,14 +132,34 @@ export default function Navbar() {
               {/* POPUP DROPDOWN MENU KHI BẤM CHUỘT */}
               {isUserMenuOpen && (
                 <div className="absolute right-0 top-[calc(100%+8px)] w-64 bg-white rounded-3xl shadow-2xl border border-slate-100 p-2 z-50 text-left overflow-hidden animate-in fade-in zoom-in-95 duration-150">
-                  <div className="p-3 bg-gradient-to-br from-slate-50 to-emerald-50/50 rounded-2xl mb-1.5 border border-slate-100">
-                    <div className="text-xs font-black text-slate-800 truncate">
-                      {currentUser.fullname || currentUser.username}
-                    </div>
-                    <div className="text-[11px] text-slate-400 truncate">@{currentUser.username}</div>
-                    <div className="mt-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-600 text-white">
-                      <i className="fa-solid fa-circle-check text-[8px]"></i>
-                      <span>{isAdmin ? 'Quyền Quản Trị Hệ Thống' : 'Tài Khoản Thành Viên'}</span>
+                  <div className="p-3 bg-gradient-to-br from-slate-50 to-emerald-50/50 rounded-2xl mb-1.5 border border-slate-100 flex items-center gap-3">
+                    {currentUser.avatarUrl ? (
+                      <img
+                        src={currentUser.avatarUrl}
+                        referrerPolicy="no-referrer"
+                        onError={(e) => {
+                          e.currentTarget.onerror = null;
+                          e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                            currentUser.fullname || 'User'
+                          )}&background=059669&color=fff&bold=true`;
+                        }}
+                        alt={currentUser.fullname || 'Avatar'}
+                        className="w-10 h-10 rounded-xl object-cover border border-emerald-200 shrink-0"
+                      />
+                    ) : (
+                      <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-400 text-white flex items-center justify-center text-sm font-black shrink-0">
+                        {(currentUser.fullname || currentUser.email || 'U').charAt(0).toUpperCase()}
+                      </div>
+                    )}
+                    <div className="min-w-0 flex-1">
+                      <div className="text-xs font-black text-slate-800 truncate">
+                        {currentUser.fullname || currentUser.email}
+                      </div>
+                      <div className="text-[11px] text-slate-400 truncate">{currentUser.email}</div>
+                      <div className="mt-1.5 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-emerald-600 text-white">
+                        <i className="fa-solid fa-circle-check text-[7px]"></i>
+                        <span>{isAdmin ? 'Quản Trị Hệ Thống' : 'Thành Viên'}</span>
+                      </div>
                     </div>
                   </div>
 
@@ -142,7 +178,7 @@ export default function Navbar() {
                         </div>
                         <div>
                           <div>Cổng Quản Trị Nội Dung</div>
-                          <div className="text-[10px] text-slate-400 font-normal">Kiểm duyệt & xóa đánh giá</div>
+                          <div className="text-[10px] text-slate-400 font-normal">Kiểm duyệt & quản lý dữ liệu</div>
                         </div>
                       </Link>
                     </div>

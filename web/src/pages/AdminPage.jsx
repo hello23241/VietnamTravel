@@ -127,8 +127,14 @@ export default function AdminPage() {
       return;
     }
     const user = JSON.parse(userStr);
-    if (user.username !== 'admin') {
-      alert('Chỉ tài khoản Quản trị viên (admin) mới có quyền truy cập trang này!');
+    // Kiểm tra quyền Admin theo Role hoặc Email cấu hình
+    const isAdminUser =
+      user.role === 'Admin' ||
+      user.email === 'admin@vietguide.com' ||
+      user.username === 'admin';
+
+    if (!isAdminUser) {
+      alert('Chỉ tài khoản Quản trị viên (Admin) mới có quyền truy cập trang này!');
       navigate('/');
       return;
     }
@@ -221,15 +227,21 @@ export default function AdminPage() {
 
   // --- THAO TÁC NGƯỜI DÙNG (USERS) ---
   const handleDeleteUser = async (user) => {
-    if (user.username === 'admin') {
-      alert('Không thể xóa tài khoản Quản trị viên tối cao (admin)!');
+    const isSuperAdmin =
+      user.role === 'Admin' ||
+      user.email === 'admin@vietguide.com' ||
+      user.username === 'admin';
+
+    if (isSuperAdmin) {
+      alert('Không thể xóa tài khoản có quyền Quản trị viên (Admin)!');
       return;
     }
-    if (!window.confirm(`Bạn có chắc chắn muốn xóa vĩnh viễn tài khoản "${user.username}"?`)) return;
+    const displayName = user.email || user.username || user.fullname;
+    if (!window.confirm(`Bạn có chắc chắn muốn xóa vĩnh viễn tài khoản "${displayName}"?`)) return;
 
     try {
       await adminApi.deleteUser(user.id);
-      alert(`Đã xóa tài khoản "${user.username}" thành công!`);
+      alert(`Đã xóa tài khoản "${displayName}" thành công!`);
       loadUsersData(userKeyword);
       loadDashboardData();
     } catch (err) {
@@ -402,7 +414,7 @@ export default function AdminPage() {
             <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Quyền Quản Trị Viên</span>
             <span className="text-xs font-black text-emerald-400 flex items-center gap-1.5">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
-              @{currentUser?.username} ({currentUser?.fullname})
+              {currentUser?.email || currentUser?.username} ({currentUser?.fullname})
             </span>
           </div>
         </div>
@@ -715,7 +727,7 @@ export default function AdminPage() {
               <div className="flex items-center gap-2 w-full sm:w-80">
                 <input
                   type="text"
-                  placeholder="Tìm theo username, họ tên..."
+                  placeholder="Tìm theo email, họ tên..."
                   value={userKeyword}
                   onChange={(e) => setUserKeyword(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && loadUsersData(userKeyword)}
@@ -742,7 +754,7 @@ export default function AdminPage() {
                     <thead className="bg-slate-50 border-b border-slate-100 text-[11px] font-bold uppercase tracking-wider text-slate-400">
                       <tr>
                         <th className="py-3.5 px-5">Thành viên</th>
-                        <th className="py-3.5 px-4">Tên đăng nhập</th>
+                        <th className="py-3.5 px-4">Email / Tài khoản</th>
                         <th className="py-3.5 px-4">Ngày đăng ký</th>
                         <th className="py-3.5 px-4">Đóng góp</th>
                         <th className="py-3.5 px-4">Vai trò</th>
@@ -751,13 +763,17 @@ export default function AdminPage() {
                     </thead>
                     <tbody className="divide-y divide-slate-100">
                       {users.map((u) => {
-                        const isSuperAdmin = u.username.toLowerCase() === 'admin';
+                        const isSuperAdmin =
+                          u.role === 'Admin' ||
+                          u.email === 'admin@vietguide.com' ||
+                          u.username === 'admin';
+
                         return (
                           <tr key={u.id} className="hover:bg-slate-50/70 transition-colors">
                             <td className="py-3.5 px-5">
                               <div className="flex items-center gap-3">
                                 <img
-                                  src={u.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(u.fullname)}`}
+                                  src={u.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(u.fullname || 'User')}`}
                                   alt={u.fullname}
                                   className="w-9 h-9 rounded-xl object-cover border border-slate-200 shrink-0"
                                 />
@@ -767,7 +783,7 @@ export default function AdminPage() {
                                 </div>
                               </div>
                             </td>
-                            <td className="py-3.5 px-4 font-semibold text-slate-700">@{u.username}</td>
+                            <td className="py-3.5 px-4 font-semibold text-slate-700">{u.email || `@${u.username}`}</td>
                             <td className="py-3.5 px-4 text-slate-500">
                               {u.createdAt ? new Date(u.createdAt).toLocaleDateString('vi-VN') : 'Mới tạo'}
                             </td>
@@ -869,7 +885,7 @@ export default function AdminPage() {
                     <div key={rev.id} className="p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-slate-50/60 transition-colors">
                       <div className="space-y-1.5 flex-1">
                         <div className="flex flex-wrap items-center gap-2.5">
-                          <span className="text-xs font-black text-slate-900">{rev.userFullname || rev.username}</span>
+                          <span className="text-xs font-black text-slate-900">{rev.userFullname || rev.userEmail || rev.username}</span>
                           <span className="text-amber-500 font-bold text-xs flex items-center gap-1">
                             <i className="fa-solid fa-star"></i> {rev.rating} sao
                           </span>

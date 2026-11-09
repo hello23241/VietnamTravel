@@ -13,6 +13,9 @@ export function WishlistProvider({ children }) {
   // Khóa lưu tạm cho khách vãng lai
   const guestStorageKey = 'vietguide_wishlist_guest';
 
+  // Khóa lưu trữ theo tài khoản Google (ưu tiên email, fallback id)
+  const getUserStorageKey = (user) => `vietguide_wishlist_${user.email || user.id}`;
+
   // Khi người dùng đăng nhập hoặc đổi tài khoản -> Đồng bộ dữ liệu với Backend
   useEffect(() => {
     const syncFavorites = async () => {
@@ -27,6 +30,8 @@ export function WishlistProvider({ children }) {
         return;
       }
 
+      const storageKey = getUserStorageKey(currentUser);
+
       // Đã đăng nhập: Tải danh sách yêu thích từ CSDL Backend
       try {
         const uid = currentUser.userId || currentUser.id;
@@ -34,10 +39,10 @@ export function WishlistProvider({ children }) {
         // Chuẩn hóa dữ liệu trả về từ API Backend (Place object)
         const normalized = (data || []).map((item) => (item.place ? item.place : item));
         setWishlist(normalized);
-        localStorage.setItem(`vietguide_wishlist_${currentUser.username}`, JSON.stringify(normalized));
+        localStorage.setItem(storageKey, JSON.stringify(normalized));
       } catch (err) {
         console.error('Lỗi nạp yêu thích từ CSDL:', err);
-        const fallback = localStorage.getItem(`vietguide_wishlist_${currentUser.username}`);
+        const fallback = localStorage.getItem(storageKey);
         if (fallback) setWishlist(JSON.parse(fallback));
       }
     };
@@ -53,7 +58,7 @@ export function WishlistProvider({ children }) {
 
     if (currentUser) {
       // Lưu offline dự phòng
-      localStorage.setItem(`vietguide_wishlist_${currentUser.username}`, JSON.stringify(updated));
+      localStorage.setItem(getUserStorageKey(currentUser), JSON.stringify(updated));
       // Gọi API Backend ghi trực tiếp vào bảng Favorites trong SQLite
       try {
         const uid = currentUser.userId || currentUser.id;
@@ -72,7 +77,7 @@ export function WishlistProvider({ children }) {
     setWishlist([]);
 
     if (currentUser) {
-      localStorage.removeItem(`vietguide_wishlist_${currentUser.username}`);
+      localStorage.removeItem(getUserStorageKey(currentUser));
       const uid = currentUser.userId || currentUser.id;
       // Gỡ từng địa điểm trên CSDL Backend
       for (const item of oldList) {
@@ -116,7 +121,7 @@ export function WishlistProvider({ children }) {
                     <h3 className="text-base font-extrabold text-slate-900 leading-tight">Kế Hoạch & Điểm Đến</h3>
                     <span className="text-[11px] text-slate-400 font-medium">
                       {currentUser
-                        ? `Đồng bộ CSDL (${currentUser.fullname || currentUser.username})`
+                        ? `Đồng bộ CSDL (${currentUser.fullname || currentUser.email})`
                         : 'Sổ tay khách vãng lai'}
                     </span>
                   </div>
