@@ -225,7 +225,6 @@ export default function AdminPage() {
     }
   };
 
-  // --- THAO TÁC NGƯỜI DÙNG (USERS) ---
   const handleDeleteUser = async (user) => {
     const isSuperAdmin =
       user.role === 'Admin' ||
@@ -246,20 +245,6 @@ export default function AdminPage() {
       loadDashboardData();
     } catch (err) {
       alert(err.message || 'Lỗi khi xóa người dùng');
-    }
-  };
-
-  // --- THAO TÁC ĐÁNH GIÁ (REVIEWS) ---
-  const handleDeleteReview = async (reviewId) => {
-    if (!window.confirm('Bạn có chắc muốn xóa nhận xét vi phạm này?')) return;
-    try {
-      await adminApi.deleteReview(reviewId);
-      alert('Đã xóa đánh giá vi phạm và cân bằng lại điểm trung bình địa điểm!');
-      loadReviewsData(reviewPage, reviewRatingFilter);
-      loadDashboardData();
-      loadPlacesData();
-    } catch (err) {
-      alert(err.message || 'Lỗi khi xóa đánh giá');
     }
   };
 
