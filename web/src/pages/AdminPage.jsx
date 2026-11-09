@@ -127,8 +127,8 @@ export default function AdminPage() {
       return;
     }
     const user = JSON.parse(userStr);
-    if (user.username !== 'admin') {
-      alert('Chỉ tài khoản Quản trị viên (admin) mới có quyền truy cập trang này!');
+    if (user.role !== 'Admin') {
+      alert('Chỉ tài khoản Quản trị viên (@dntu.edu.vn) mới có quyền truy cập trang này!');
       navigate('/');
       return;
     }
@@ -219,35 +219,20 @@ export default function AdminPage() {
     }
   };
 
-  // --- THAO TÁC NGƯỜI DÙNG (USERS) ---
   const handleDeleteUser = async (user) => {
-    if (user.username === 'admin') {
-      alert('Không thể xóa tài khoản Quản trị viên tối cao (admin)!');
+    if (user.role === 'Admin') {
+      alert('Không thể xóa tài khoản Quản trị viên!');
       return;
     }
-    if (!window.confirm(`Bạn có chắc chắn muốn xóa vĩnh viễn tài khoản "${user.username}"?`)) return;
+    if (!window.confirm(`Bạn có chắc chắn muốn xóa vĩnh viễn tài khoản "${user.email}"?`)) return;
 
     try {
       await adminApi.deleteUser(user.id);
-      alert(`Đã xóa tài khoản "${user.username}" thành công!`);
+      alert(`Đã xóa tài khoản "${user.email}" thành công!`);
       loadUsersData(userKeyword);
       loadDashboardData();
     } catch (err) {
       alert(err.message || 'Lỗi khi xóa người dùng');
-    }
-  };
-
-  // --- THAO TÁC ĐÁNH GIÁ (REVIEWS) ---
-  const handleDeleteReview = async (reviewId) => {
-    if (!window.confirm('Bạn có chắc muốn xóa nhận xét vi phạm này?')) return;
-    try {
-      await adminApi.deleteReview(reviewId);
-      alert('Đã xóa đánh giá vi phạm và cân bằng lại điểm trung bình địa điểm!');
-      loadReviewsData(reviewPage, reviewRatingFilter);
-      loadDashboardData();
-      loadPlacesData();
-    } catch (err) {
-      alert(err.message || 'Lỗi khi xóa đánh giá');
     }
   };
 
@@ -402,7 +387,7 @@ export default function AdminPage() {
             <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Quyền Quản Trị Viên</span>
             <span className="text-xs font-black text-emerald-400 flex items-center gap-1.5">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
-              @{currentUser?.username} ({currentUser?.fullname})
+              @{currentUser?.email} ({currentUser?.fullname})
             </span>
           </div>
         </div>
@@ -751,7 +736,7 @@ export default function AdminPage() {
                     </thead>
                     <tbody className="divide-y divide-slate-100">
                       {users.map((u) => {
-                        const isSuperAdmin = u.username.toLowerCase() === 'admin';
+                      const isSuperAdmin = u.role === 'Admin';
                         return (
                           <tr key={u.id} className="hover:bg-slate-50/70 transition-colors">
                             <td className="py-3.5 px-5">
@@ -767,7 +752,7 @@ export default function AdminPage() {
                                 </div>
                               </div>
                             </td>
-                            <td className="py-3.5 px-4 font-semibold text-slate-700">@{u.username}</td>
+                            <td className="py-3.5 px-4 font-semibold text-slate-700">{u.email}</td>
                             <td className="py-3.5 px-4 text-slate-500">
                               {u.createdAt ? new Date(u.createdAt).toLocaleDateString('vi-VN') : 'Mới tạo'}
                             </td>

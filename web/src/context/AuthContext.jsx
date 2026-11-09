@@ -30,7 +30,7 @@ export function AuthProvider({ children }) {
         currentUser,
         login,
         logout,
-        isAdmin: currentUser?.username === 'admin',
+        isAdmin: currentUser?.role === 'Admin',
       }}
     >
       {children}

@@ -18,6 +18,9 @@ public static class DbInitializer
         }
 
         // TỰ ĐỘNG CẬP NHẬT ẢNH CDN CHO CSDL ĐÃ TẠO TỪ TRƯỚC
+        var place1 = context.Places.FirstOrDefault(p => p.Id == 1);
+        if (place1 != null && place1.ImageUrl.StartsWith("http")) place1.ImageUrl = "ba-na-hills.jpg";
+
         var place2 = context.Places.FirstOrDefault(p => p.Id == 2);
         if (place2 != null && place2.ImageUrl.StartsWith("http")) place2.ImageUrl = "ho-hoan-kiem.jpg";
 
@@ -32,31 +35,31 @@ public static class DbInitializer
 
         context.SaveChanges();
 
-        // 2. SEED TÀI KHOẢN ADMIN VÀ USER
-        if (!context.Users.Any(u => u.Email.ToLower() == "admin@vietguide.com"))
+        // 2. DỌN DẸP TÀI KHOẢN CŨ & SEED TÀI KHOẢN MẪU nhankiet1705@gmail.com
+        var oldAccounts = context.Users
+            .Where(u => u.Email.ToLower() == "admin@vietguide.com" || u.Email.ToLower() == "kietho@gmail.com")
+            .ToList();
+        if (oldAccounts.Count > 0)
         {
-            context.Users.Add(new User
-            {
-                Email = "admin@vietguide.com",
-                Fullname = "Quản trị viên Hệ thống",
-                AvatarUrl = "https://ui-avatars.com/api/?name=Admin+VietGuide",
-                Role = "Admin",
-                CreatedAt = DateTime.UtcNow
-            });
+            context.Users.RemoveRange(oldAccounts);
+            context.SaveChanges();
         }
 
-        if (!context.Users.Any(u => u.Email.ToLower() == "kietho@gmail.com"))
+        const string sampleEmail = "nhankiet1705@gmail.com";
+        var sampleUser = context.Users.FirstOrDefault(u => u.Email.ToLower() == sampleEmail);
+        if (sampleUser == null)
         {
-            context.Users.Add(new User
+            sampleUser = new User
             {
-                Email = "kietho@gmail.com",
+                Email = sampleEmail,
                 Fullname = "Hồ Nhân Kiệt",
                 AvatarUrl = "https://ui-avatars.com/api/?name=Kiet+Ho",
                 Role = "User",
                 CreatedAt = DateTime.UtcNow
-            });
+            };
+            context.Users.Add(sampleUser);
+            context.SaveChanges();
         }
-        context.SaveChanges();
 
         // 3. SEED THÊM TỈNH THÀNH (Nếu chưa có)
         var requiredProvinces = new List<Province>
@@ -222,23 +225,22 @@ public static class DbInitializer
                     Latitude = 10.7769, Longitude = 106.6953, TicketPriceAvg = 65000m, RatingAvg = 4.6f
                 }
             };
-            
+
             context.Places.AddRange(places);
             context.SaveChanges();
         }
 
-        // 5. SEED ĐÁNH GIÁ MẪU
+        // 5. SEED ĐÁNH GIÁ MẪU CHO nhankiet1705@gmail.com
         if (!context.Reviews.Any())
         {
-            var kiet = context.Users.FirstOrDefault(u => u.Email == "kietho@gmail.com");
             var place = context.Places.FirstOrDefault(p => p.Id == 1);
 
-            if (kiet != null && place != null)
+            if (sampleUser != null && place != null)
             {
                 context.Reviews.AddRange(
                     new Review
                     {
-                        UserId = kiet.Id,
+                        UserId = sampleUser.Id,
                         PlaceId = place.Id,
                         Rating = 5,
                         Comment = "Cầu Vàng Bà Nà Hills cảnh sắc tuyệt đẹp, dịch vụ cáp treo rất chuyên nghiệp!",
@@ -246,7 +248,7 @@ public static class DbInitializer
                     },
                     new Review
                     {
-                        UserId = kiet.Id,
+                        UserId = sampleUser.Id,
                         PlaceId = place.Id,
                         Rating = 1,
                         Comment = "Nội dung quảng cáo spam dịch vụ tour ngoài luồng không chính thống...",

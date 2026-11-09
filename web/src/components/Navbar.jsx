@@ -94,7 +94,7 @@ export default function Navbar() {
                 </div>
                 <div className="text-left hidden sm:block">
                   <div className="text-xs font-black text-slate-800 leading-tight">
-                    {currentUser.fullname || currentUser.username}
+                    {currentUser.fullname || currentUser.email}
                   </div>
                   <div className="text-[10px] font-semibold text-emerald-600 flex items-center gap-1">
                     {isAdmin ? (

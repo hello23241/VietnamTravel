@@ -46,10 +46,9 @@ public class AuthController : ControllerBase
         }
 
         var email = payload.Email.ToLower().Trim();
-        var adminEmail = (_configuration["GoogleAuth:AdminEmail"] ?? "").ToLower().Trim();
 
-        // 2. Kiểm tra xem tài khoản này có khớp với email của Admin không
-        var role = (!string.IsNullOrWhiteSpace(adminEmail) && email == adminEmail) ? "Admin" : "User";
+        var isAdminDomain = email.EndsWith("@dntu.edu.vn", StringComparison.OrdinalIgnoreCase);
+        var role = isAdminDomain ? "Admin" : "User";
 
         // 3. Tìm user trong cơ sở dữ liệu theo email
         var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
