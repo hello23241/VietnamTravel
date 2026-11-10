@@ -27,7 +27,7 @@ export default function HomePage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedRegion, setSelectedRegion] = useState('all');
   const [selectedProvince, setSelectedProvince] = useState('');
-  const [provinceDetail, setProvinceDetail] = useState(null); // Chi tiết tỉnh từ GET /api/Provinces/{id}
+  const [provinceDetail, setProvinceDetail] = useState(null);
   const [activeCategory, setActiveCategory] = useState('all');
   const [selectedSort, setSelectedSort] = useState('danhgia');
 
@@ -119,7 +119,6 @@ export default function HomePage() {
     }
   };
 
-  // Gọi API GET /api/Provinces/{id} khi người dùng bấm chọn tỉnh
   const handleSelectProvince = async (provIdStr) => {
     if (selectedProvince === provIdStr) {
       setSelectedProvince('');
@@ -166,268 +165,302 @@ export default function HomePage() {
     loadPlaces();
   };
 
+  const handleExploreClick = (e) => {
+    e.preventDefault();
+    const target = document.getElementById('destinations-section');
+    if (target) {
+      target.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
   const currentRegionLabel = REGIONS.find((r) => r.id === selectedRegion)?.label || 'Tất cả Vùng Miền';
   const currentSortObj = SORT_OPTIONS.find((s) => s.id === selectedSort) || SORT_OPTIONS[0];
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-800 font-sans antialiased">
-      {/* 1. HERO SECTION */}
-      <section className="relative bg-gradient-to-b from-emerald-900 via-teal-900 to-slate-900 text-white pt-16 pb-28 px-4 sm:px-6 lg:px-8">
-        <div className="absolute inset-0 opacity-20 pointer-events-none overflow-hidden">
-          <div className="absolute -top-24 -left-24 w-96 h-96 bg-emerald-400 rounded-full blur-3xl"></div>
-          <div className="absolute top-1/2 -right-24 w-96 h-96 bg-teal-300 rounded-full blur-3xl"></div>
-        </div>
+      {/* ============================================================== */}
+      {/* 1. HERO BANNER                                                 */}
+      {/* ============================================================== */}
+      <section className="relative w-full bg-slate-50 overflow-hidden">
+        <div className="w-full max-w-[1920px] mx-auto relative">
+          <img
+            src="/cam-nang-du-lich.png"
+            onError={(e) => {
+              e.currentTarget.onerror = null;
+              e.currentTarget.src =
+                'https://images.unsplash.com/photo-1528127269322-539801943592?auto=format&fit=crop&w=1920&q=85';
+            }}
+            alt="Cẩm Nang Du Lịch Việt Nam - VietGuide"
+            className="w-full h-[340px] sm:h-[460px] md:h-[560px] lg:h-[640px] object-cover object-center"
+          />
 
-        <div className="max-w-4xl mx-auto text-center relative z-30">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-emerald-300 text-xs font-semibold uppercase tracking-wider mb-6">
-            <i className="fa-solid fa-earth-asia"></i>
-            <span>CẨM NANG DU LỊCH TRỰC TUYẾN • VIỆT NAM TRAVEL</span>
+          {/* Nút bấm Khám Phá Ngay cách rời dòng chữ slogan */}
+          <div className="absolute top-[75%] sm:top-[76%] md:top-[77%] lg:top-[79%] left-5 sm:left-12 md:left-20 lg:left-28 z-20">
+            <button
+              type="button"
+              onClick={handleExploreClick}
+              className="inline-flex items-center gap-2 sm:gap-2.5 px-5 sm:px-6 py-2.5 sm:py-3 rounded-full bg-emerald-700 hover:bg-emerald-800 text-white font-black text-xs sm:text-sm shadow-xl shadow-emerald-950/25 hover:shadow-emerald-700/40 hover:-translate-y-0.5 active:translate-y-0 transition-all border border-emerald-500/40 group cursor-pointer"
+            >
+              <span className="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center text-[10px] group-hover:rotate-45 transition-transform duration-300">
+                <i className="fa-solid fa-compass text-emerald-200"></i>
+              </span>
+              <span>Khám Phá Ngay</span>
+              <i className="fa-solid fa-arrow-right text-xs group-hover:translate-x-1 transition-transform"></i>
+            </button>
           </div>
 
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight leading-tight mb-6">
-            Cẩm Nang Du Lịch{' '}
-            <span className="bg-gradient-to-r from-emerald-400 via-teal-300 to-amber-300 bg-clip-text text-transparent">
-              Việt Nam
+          {/* Dải Gradient chuyển mờ chân banner */}
+          <div className="absolute inset-x-0 bottom-0 h-16 sm:h-24 md:h-32 bg-gradient-to-t from-slate-50 via-slate-50/40 to-transparent pointer-events-none" />
+        </div>
+      </section>
+
+      {/* ============================================================== */}
+      {/* 2. KHUNG TÌM KIẾM & BỘ LỌC NỔI                                */}
+      {/* ============================================================== */}
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 -mt-6 sm:-mt-8 md:-mt-10 relative z-30">
+        <div className="bg-white/95 backdrop-blur-md p-4 sm:p-6 rounded-3xl shadow-2xl shadow-slate-300/60 border border-slate-200/90 text-slate-800">
+          <div className="flex items-center gap-2 mb-3">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-black uppercase tracking-wider bg-emerald-50 text-emerald-700 border border-emerald-200">
+              <i className="fa-solid fa-compass text-emerald-600"></i> Tra Cứu Tọa Độ
             </span>
-          </h1>
+            <span className="text-xs text-slate-400 font-medium hidden sm:inline">
+              Khám phá hơn 20+ danh lam thắng cảnh và ẩm thực 3 miền
+            </span>
+          </div>
 
-          <p className="text-base sm:text-lg text-slate-300 max-w-2xl mx-auto mb-10 font-normal">
-            Khám phá vẻ đẹp kỳ vĩ của dải đất hình chữ S: từ Hà Giang đến Phú Quốc. Cùng VietGuide lên kế hoạch cho những
-            chuyến hành trình trọn vẹn và đáng nhớ.
-          </p>
+          <form onSubmit={handleSearchSubmit} className="flex flex-col md:flex-row gap-2.5 relative">
+            <div ref={searchRef} className="relative flex-1">
+              <i className="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+              <input
+                type="text"
+                autoComplete="off"
+                value={searchTerm}
+                onFocus={() => {
+                  if (searchTerm.trim().length > 0) setShowSuggestions(true);
+                }}
+                onChange={(e) => handleSearchChange(e.target.value)}
+                placeholder="Tìm theo tên địa danh, tỉnh thành..."
+                className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white transition-all font-medium"
+              />
 
-          {/* Ô Tìm Kiếm */}
-          <div className="bg-white p-3 rounded-2xl shadow-2xl shadow-black/40 text-slate-800 border border-slate-100 max-w-3xl mx-auto relative z-40">
-            <form onSubmit={handleSearchSubmit} className="flex flex-col md:flex-row gap-2 relative">
-              <div ref={searchRef} className="relative flex-1">
-                <i className="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
-                <input
-                  type="text"
-                  autoComplete="off"
-                  value={searchTerm}
-                  onFocus={() => {
-                    if (searchTerm.trim().length > 0) setShowSuggestions(true);
-                  }}
-                  onChange={(e) => handleSearchChange(e.target.value)}
-                  placeholder="Tìm theo tên địa danh, tỉnh thành..."
-                  className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white transition-all font-medium"
-                />
-
-                {showSuggestions && (
-                  <div className="absolute top-[calc(100%+8px)] left-0 right-0 bg-white rounded-2xl shadow-[0_15px_50px_-10px_rgba(0,0,0,0.3)] border border-slate-200 overflow-hidden z-50 flex flex-col max-h-[320px] overflow-y-auto text-left divide-y divide-slate-100">
-                    {suggestions.length === 0 ? (
-                      <div className="p-4 text-center text-xs text-slate-400">
-                        Không tìm thấy địa điểm nào khớp với "{searchTerm}"
-                      </div>
-                    ) : (
-                      suggestions.map((item) => (
-                        <div
-                          key={item.id}
-                          onClick={() => handleSelectSuggestion(item)}
-                          className="p-3 hover:bg-emerald-50/70 cursor-pointer flex items-center gap-3 transition-colors group"
-                        >
-                          <img
-                            src={item.imageUrl}
-                            alt={item.name}
-                            className="w-11 h-11 rounded-xl object-cover shrink-0 border border-slate-100 shadow-sm group-hover:scale-105 transition-transform"
-                          />
-                          <div className="flex-1 min-w-0">
-                            <div className="text-sm font-bold text-slate-800 group-hover:text-emerald-700 truncate">
-                              {item.name}
-                            </div>
-                            <div className="text-[11px] text-slate-500 truncate flex items-center gap-1.5 mt-0.5">
-                              <span>📍 {item.provinceName || item.address}</span>
-                              <span>•</span>
-                              <span className="text-amber-500 font-bold">★ {item.ratingAvg?.toFixed(1) || '5.0'}</span>
-                            </div>
+              {showSuggestions && (
+                <div className="absolute top-[calc(100%+8px)] left-0 right-0 bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden z-50 flex flex-col max-h-[320px] overflow-y-auto text-left divide-y divide-slate-100">
+                  {suggestions.length === 0 ? (
+                    <div className="p-4 text-center text-xs text-slate-400">
+                      Không tìm thấy địa điểm nào khớp với "{searchTerm}"
+                    </div>
+                  ) : (
+                    suggestions.map((item) => (
+                      <div
+                        key={item.id}
+                        onClick={() => handleSelectSuggestion(item)}
+                        className="p-3 hover:bg-emerald-50/70 cursor-pointer flex items-center gap-3 transition-colors group"
+                      >
+                        <img
+                          src={item.imageUrl}
+                          alt={item.name}
+                          className="w-11 h-11 rounded-xl object-cover shrink-0 border border-slate-100 shadow-sm group-hover:scale-105 transition-transform"
+                        />
+                        <div className="flex-1 min-w-0">
+                          <div className="text-sm font-bold text-slate-800 group-hover:text-emerald-700 truncate">
+                            {item.name}
                           </div>
-                          <i className="fa-solid fa-chevron-right text-xs text-slate-300 group-hover:text-emerald-600 group-hover:translate-x-1 transition-all"></i>
+                          <div className="text-[11px] text-slate-500 truncate flex items-center gap-1.5 mt-0.5">
+                            <span>📍 {item.provinceName || item.address}</span>
+                            <span>•</span>
+                            <span className="text-amber-500 font-bold">★ {item.ratingAvg?.toFixed(1) || '5.0'}</span>
+                          </div>
                         </div>
-                      ))
-                    )}
-                  </div>
-                )}
-              </div>
+                        <i className="fa-solid fa-chevron-right text-xs text-slate-300 group-hover:text-emerald-600 group-hover:translate-x-1 transition-all"></i>
+                      </div>
+                    ))
+                  )}
+                </div>
+              )}
+            </div>
 
-              {/* Dropdown Vùng miền */}
-              <div ref={regionRef} className="relative min-w-[190px]">
-                <button
-                  type="button"
-                  onClick={() => setIsRegionOpen(!isRegionOpen)}
-                  className={`w-full px-4 py-3 bg-slate-50 border rounded-xl text-sm font-semibold flex items-center justify-between transition-all ${
-                    isRegionOpen
-                      ? 'border-emerald-500 ring-2 ring-emerald-500 bg-white shadow-sm'
-                      : 'border-slate-200 hover:bg-slate-100/70'
-                  }`}
-                >
-                  <span className="text-slate-800 truncate">{currentRegionLabel}</span>
-                  <i
-                    className={`fa-solid fa-chevron-down text-xs text-slate-400 ml-2 transition-transform duration-200 ${
-                      isRegionOpen ? 'rotate-180 text-emerald-600' : ''
-                    }`}
-                  ></i>
-                </button>
-
-                {isRegionOpen && (
-                  <div className="absolute top-[calc(100%+8px)] left-0 right-0 bg-white rounded-2xl shadow-2xl border border-slate-100 py-1.5 z-50 text-left overflow-hidden">
-                    {REGIONS.map((r) => {
-                      const isSelected = selectedRegion === r.id;
-                      return (
-                        <button
-                          key={r.id}
-                          type="button"
-                          onClick={() => {
-                            setSelectedRegion(r.id);
-                            setIsRegionOpen(false);
-                          }}
-                          className={`w-full px-4 py-2.5 text-xs font-semibold flex items-center justify-between transition-colors ${
-                            isSelected
-                              ? 'bg-emerald-50 text-emerald-700 font-bold'
-                              : 'text-slate-700 hover:bg-slate-50'
-                          }`}
-                        >
-                          <div className="flex items-center gap-2.5">
-                            <i className={`fa-solid ${r.icon} text-slate-400 text-xs w-4`}></i>
-                            <span>{r.label}</span>
-                          </div>
-                          {isSelected && <i className="fa-solid fa-check text-emerald-600 text-xs"></i>}
-                        </button>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-
+            <div ref={regionRef} className="relative min-w-[200px]">
               <button
-                type="submit"
-                className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-6 py-3 rounded-xl text-sm transition-all flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/30"
+                type="button"
+                onClick={() => setIsRegionOpen(!isRegionOpen)}
+                className={`w-full px-4 py-3 bg-slate-50 border rounded-2xl text-sm font-semibold flex items-center justify-between transition-all ${
+                  isRegionOpen
+                    ? 'border-emerald-500 ring-2 ring-emerald-500 bg-white shadow-sm'
+                    : 'border-slate-200 hover:bg-slate-100/70'
+                }`}
               >
-                <i className="fa-solid fa-filter"></i>
-                <span>Lọc Kết Quả</span>
+                <span className="text-slate-800 truncate">{currentRegionLabel}</span>
+                <i
+                  className={`fa-solid fa-chevron-down text-xs text-slate-400 ml-2 transition-transform duration-200 ${
+                    isRegionOpen ? 'rotate-180 text-emerald-600' : ''
+                  }`}
+                ></i>
               </button>
-            </form>
 
-            {/* BỘ LỌC TỈNH THÀNH ĐỘNG */}
-            {provinces.length > 0 && (
-              <div className="flex items-center gap-1.5 pt-3 px-1 overflow-x-auto text-xs font-medium text-slate-600 border-t border-slate-100 mt-2">
-                <span className="text-slate-400 text-[11px] shrink-0 font-bold uppercase tracking-wider">Tỉnh thành:</span>
+              {isRegionOpen && (
+                <div className="absolute top-[calc(100%+8px)] left-0 right-0 bg-white rounded-2xl shadow-2xl border border-slate-100 py-1.5 z-50 text-left overflow-hidden">
+                  {REGIONS.map((r) => {
+                    const isSelected = selectedRegion === r.id;
+                    return (
+                      <button
+                        key={r.id}
+                        type="button"
+                        onClick={() => {
+                          setSelectedRegion(r.id);
+                          setIsRegionOpen(false);
+                        }}
+                        className={`w-full px-4 py-2.5 text-xs font-semibold flex items-center justify-between transition-colors ${
+                          isSelected
+                            ? 'bg-emerald-50 text-emerald-700 font-bold'
+                            : 'text-slate-700 hover:bg-slate-50'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2.5">
+                          <i className={`fa-solid ${r.icon} text-slate-400 text-xs w-4`}></i>
+                          <span>{r.label}</span>
+                        </div>
+                        {isSelected && <i className="fa-solid fa-check text-emerald-600 text-xs"></i>}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            <button
+              type="submit"
+              className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-6 py-3 rounded-2xl text-sm transition-all flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/25 shrink-0"
+            >
+              <i className="fa-solid fa-filter"></i>
+              <span>Lọc Kết Quả</span>
+            </button>
+          </form>
+
+          {provinces.length > 0 && (
+            <div className="flex items-center gap-1.5 pt-3.5 px-1 overflow-x-auto text-xs font-medium text-slate-600 border-t border-slate-100 mt-3.5">
+              <span className="text-slate-400 text-[11px] shrink-0 font-bold uppercase tracking-wider">
+                Tỉnh thành:
+              </span>
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedProvince('');
+                  setProvinceDetail(null);
+                }}
+                className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-colors ${
+                  selectedProvince === ''
+                    ? 'bg-teal-600 text-white shadow-xs font-bold'
+                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                }`}
+              >
+                Tất cả ({provinces.reduce((acc, p) => acc + (p.totalPlaces || 0), 0)})
+              </button>
+              {provinces.map((p) => (
                 <button
+                  key={p.id}
                   type="button"
-                  onClick={() => {
-                    setSelectedProvince('');
-                    setProvinceDetail(null);
-                  }}
-                  className={`px-2.5 py-1 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors ${
-                    selectedProvince === ''
-                      ? 'bg-teal-600 text-white shadow-xs'
+                  onClick={() => handleSelectProvince(String(p.id))}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-colors flex items-center gap-1 ${
+                    selectedProvince === String(p.id)
+                      ? 'bg-teal-600 text-white shadow-xs font-bold'
                       : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                   }`}
                 >
-                  Tất cả ({provinces.reduce((acc, p) => acc + (p.totalPlaces || 0), 0)})
+                  <span>📍 {p.name}</span>
+                  <span className="text-[10px] opacity-75">({p.totalPlaces || 0})</span>
                 </button>
-                {provinces.map((p) => (
-                  <button
-                    key={p.id}
-                    type="button"
-                    onClick={() => handleSelectProvince(String(p.id))}
-                    className={`px-2.5 py-1 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors flex items-center gap-1 ${
-                      selectedProvince === String(p.id)
-                        ? 'bg-teal-600 text-white shadow-xs'
-                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                    }`}
-                  >
-                    <span>📍 {p.name}</span>
-                    <span className="text-[10px] opacity-75">({p.totalPlaces || 0})</span>
-                  </button>
-                ))}
-              </div>
-            )}
+              ))}
+            </div>
+          )}
 
-            {/* Dải Thể Loại Pills */}
-            <div className="flex items-center gap-2 pt-2 px-1 overflow-x-auto text-xs font-medium text-slate-600">
-              <span className="text-slate-400 text-[11px] shrink-0 font-bold uppercase tracking-wider">Thể loại:</span>
+          <div className="flex items-center gap-2 pt-2.5 px-1 overflow-x-auto text-xs font-medium text-slate-600">
+            <span className="text-slate-400 text-[11px] shrink-0 font-bold uppercase tracking-wider">
+              Thể loại:
+            </span>
+            <button
+              type="button"
+              onClick={() => setActiveCategory('all')}
+              className={`px-3 py-1.5 rounded-xl whitespace-nowrap transition-colors ${
+                activeCategory === 'all'
+                  ? 'bg-emerald-100 text-emerald-800 font-bold'
+                  : 'bg-slate-100 hover:bg-slate-200'
+              }`}
+            >
+              Tất cả
+            </button>
+            {categories.map((c) => (
               <button
+                key={c.id}
                 type="button"
-                onClick={() => setActiveCategory('all')}
-                className={`px-3 py-1.5 rounded-lg whitespace-nowrap transition-colors ${
-                  activeCategory === 'all'
+                onClick={() => setActiveCategory(activeCategory === String(c.id) ? 'all' : String(c.id))}
+                className={`px-3 py-1.5 rounded-xl whitespace-nowrap transition-colors ${
+                  activeCategory === String(c.id)
                     ? 'bg-emerald-100 text-emerald-800 font-bold'
                     : 'bg-slate-100 hover:bg-slate-200'
                 }`}
               >
-                Tất cả
+                {c.name}
               </button>
-              {categories.map((c) => (
-                <button
-                  key={c.id}
-                  type="button"
-                  onClick={() => setActiveCategory(activeCategory === String(c.id) ? 'all' : String(c.id))}
-                  className={`px-3 py-1.5 rounded-lg whitespace-nowrap transition-colors ${
-                    activeCategory === String(c.id)
-                      ? 'bg-emerald-100 text-emerald-800 font-bold'
-                      : 'bg-slate-100 hover:bg-slate-200'
-                  }`}
-                >
-                  {c.name}
-                </button>
-              ))}
-            </div>
+            ))}
           </div>
         </div>
-      </section>
+      </div>
 
-      {/* 2. STATS COUNTER BAR */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-10 relative z-20">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 bg-white rounded-2xl p-6 shadow-xl shadow-slate-200/50 border border-slate-100">
+      {/* ============================================================== */}
+      {/* 3. THẺ THỐNG KÊ NHANH                                         */}
+      {/* ============================================================== */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8 sm:mt-10 relative z-20">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 bg-white rounded-3xl p-6 shadow-xl shadow-slate-200/50 border border-slate-200/80">
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl">
+            <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl shrink-0">
               <i className="fa-solid fa-map-location-dot"></i>
             </div>
             <div>
-              <div className="text-2xl font-bold text-slate-900">{places.length}+</div>
+              <div className="text-2xl font-black text-slate-900">{places.length}+</div>
               <div className="text-xs text-slate-500 font-medium">Điểm Đến Trọng Điểm</div>
             </div>
           </div>
 
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-xl bg-teal-50 text-teal-600 flex items-center justify-center text-xl">
+            <div className="w-12 h-12 rounded-2xl bg-teal-50 text-teal-600 flex items-center justify-center text-xl shrink-0">
               <i className="fa-solid fa-umbrella-beach"></i>
             </div>
             <div>
-              <div className="text-2xl font-bold text-slate-900">3 Miền</div>
+              <div className="text-2xl font-black text-slate-900">3 Miền</div>
               <div className="text-xs text-slate-500 font-medium">Bắc - Trung - Nam</div>
             </div>
           </div>
 
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center text-xl">
+            <div className="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center text-xl shrink-0">
               <i className="fa-solid fa-comments"></i>
             </div>
             <div>
-              <div className="text-2xl font-bold text-slate-900">100%</div>
+              <div className="text-2xl font-black text-slate-900">100%</div>
               <div className="text-xs text-slate-500 font-medium">Cẩm Nang & Đánh Giá</div>
             </div>
           </div>
 
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-xl">
+            <div className="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-xl shrink-0">
               <i className="fa-solid fa-shield-heart"></i>
             </div>
             <div>
-              <div className="text-2xl font-bold text-slate-900">24/7</div>
+              <div className="text-2xl font-black text-slate-900">24/7</div>
               <div className="text-xs text-slate-500 font-medium">Đồng Hành Du Khách</div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* 3. LƯỚI ĐIỂM ĐẾN */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16" id="destinations-section">
-        {/* BANNER THÔNG TIN CHI TIẾT TỈNH THÀNH (GET /api/Provinces/{id}) */}
+      {/* ============================================================== */}
+      {/* 4. LƯỚI ĐIỂM ĐẾN                                              */}
+      {/* ============================================================== */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12" id="destinations-section">
         {provinceDetail && (
-          <div className="mb-8 p-4 sm:p-5 bg-gradient-to-r from-teal-50 via-emerald-50 to-slate-50 rounded-2xl border border-teal-200/80 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 animate-in fade-in">
+          <div className="mb-8 p-4 sm:p-5 bg-gradient-to-r from-teal-50 via-emerald-50 to-slate-50 rounded-3xl border border-teal-200/80 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 animate-in fade-in">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-teal-600 text-white flex items-center justify-center text-lg shadow-sm">
+              <div className="w-10 h-10 rounded-2xl bg-teal-600 text-white flex items-center justify-center text-lg shadow-sm">
                 <i className="fa-solid fa-location-dot"></i>
               </div>
               <div>
@@ -458,7 +491,7 @@ export default function HomePage() {
 
         <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-8 border-b border-slate-200 mb-8 gap-4">
           <div>
-            <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+            <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
               Khám Phá Các Tọa Độ Hấp Dẫn
             </h2>
             <p className="text-sm text-slate-500 mt-1">Lựa chọn chuyến đi tiếp theo của bạn từ cơ sở dữ liệu cẩm nang du lịch</p>
@@ -471,7 +504,7 @@ export default function HomePage() {
               <button
                 type="button"
                 onClick={() => setIsSortOpen(!isSortOpen)}
-                className={`text-xs font-semibold px-3.5 py-2.5 rounded-xl border flex items-center gap-2 transition-all ${
+                className={`text-xs font-semibold px-3.5 py-2.5 rounded-2xl border flex items-center gap-2 transition-all ${
                   isSortOpen
                     ? 'border-emerald-500 ring-2 ring-emerald-500 bg-white text-emerald-700 shadow-sm'
                     : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
@@ -616,11 +649,13 @@ export default function HomePage() {
         )}
       </main>
 
-      {/* 4. MỤC KINH NGHIỆM DU LỊCH */}
+      {/* ============================================================== */}
+      {/* 5. MỤC KINH NGHIỆM DU LỊCH BỎ TÚI                              */}
+      {/* ============================================================== */}
       <section className="bg-slate-100 py-16 border-t border-slate-200" id="features-section">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-2xl mx-auto mb-12">
-            <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+            <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
               Kinh Nghiệm & Cẩm Nang Bỏ Túi
             </h2>
             <p className="text-sm text-slate-500 mt-2">
@@ -629,8 +664,8 @@ export default function HomePage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200/80">
-              <div className="w-12 h-12 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center text-xl mb-4">
+            <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-200/80">
+              <div className="w-12 h-12 rounded-2xl bg-amber-100 text-amber-700 flex items-center justify-center text-xl mb-4">
                 <i className="fa-solid fa-cloud-sun"></i>
               </div>
               <h3 className="text-lg font-bold text-slate-800 mb-2">Thời Điểm Du Lịch</h3>
@@ -639,8 +674,8 @@ export default function HomePage() {
               </p>
             </div>
 
-            <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200/80">
-              <div className="w-12 h-12 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center text-xl mb-4">
+            <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-200/80">
+              <div className="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-700 flex items-center justify-center text-xl mb-4">
                 <i className="fa-solid fa-bowl-food"></i>
               </div>
               <h3 className="text-lg font-bold text-slate-800 mb-2">Khám Phá Ẩm Thực Bản Địa</h3>
@@ -649,8 +684,8 @@ export default function HomePage() {
               </p>
             </div>
 
-            <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200/80">
-              <div className="w-12 h-12 rounded-xl bg-teal-100 text-teal-700 flex items-center justify-center text-xl mb-4">
+            <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-200/80">
+              <div className="w-12 h-12 rounded-2xl bg-teal-100 text-teal-700 flex items-center justify-center text-xl mb-4">
                 <i className="fa-solid fa-wallet"></i>
               </div>
               <h3 className="text-lg font-bold text-slate-800 mb-2">Tối Ưu Ngân Sách Đi Lại</h3>
@@ -662,17 +697,20 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* 5. FOOTER */}
+      {/* ============================================================== */}
+      {/* 6. CHÂN TRANG (FOOTER)                                         */}
+      {/* ============================================================== */}
       <footer className="bg-slate-950 text-slate-400 py-12 border-t border-slate-800 text-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="flex items-center gap-3">
             <img
               src="/icon.png"
               onError={(e) => {
-                e.currentTarget.src = 'https://cdn.jsdelivr.net/gh/hello23241/VietnamTravel@main/images/icon.png';
+                e.currentTarget.src =
+                  'https://cdn.jsdelivr.net/gh/hello23241/VietnamTravel@main/images/icon.png';
               }}
               alt="VietGuide Logo"
-              className="w-10 h-10 rounded-xl object-contain bg-white p-0.5"
+              className="w-10 h-10 rounded-2xl object-contain bg-white p-1"
             />
             <div>
               <span className="font-bold text-white text-base">VietGuide Travel</span>
