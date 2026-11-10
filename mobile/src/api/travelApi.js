@@ -1,9 +1,13 @@
 import apiClient from './apiClient';
 
 export const travelApi = {
-  // Xác thực bằng Google ID Token thật (dùng chung endpoint với Web)
+  // Xác thực bằng Google ID Token
   loginWithGoogle: (idToken) =>
     apiClient.post('/Auth/google', { idToken }),
+
+  // Kiểm tra phiên đăng nhập Google từ trình duyệt Mobile
+  getGoogleSession: (sessionId) =>
+    apiClient.get(`/Auth/google-session/${sessionId}`),
 
   // Danh mục & Tỉnh thành
   getCategories: () => 

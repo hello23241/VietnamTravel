@@ -2,7 +2,6 @@
   "expo": {
     "name": "VietGuide",
     "slug": "vietguide",
-    "scheme": "vietguide",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",

@@ -1,6 +1,7 @@
 using Google.Apis.Auth;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 using TravelGuide.Api.Data;
 using TravelGuide.Api.DTOs;
 using TravelGuide.Api.Models;
@@ -13,11 +14,13 @@ public class AuthController : ControllerBase
 {
     private readonly AppDbContext _context;
     private readonly IConfiguration _configuration;
+    private readonly IMemoryCache _cache;
 
-    public AuthController(AppDbContext context, IConfiguration configuration)
+    public AuthController(AppDbContext context, IConfiguration configuration, IMemoryCache cache)
     {
         _context = context;
         _configuration = configuration;
+        _cache = cache;
     }
 
     private static bool IsDntuAdminEmail(string email)
@@ -26,27 +29,21 @@ public class AuthController : ControllerBase
                email.EndsWith(".dntu.edu.vn", StringComparison.OrdinalIgnoreCase);
     }
 
-    [HttpPost("google")]
-    public async Task<ActionResult<UserResponseDto>> GoogleLogin([FromBody] GoogleLoginRequestDto dto)
+    /// <summary>
+    /// Hàm dùng chung để xác thực Google ID Token và đồng bộ User vào SQLite
+    /// </summary>
+    private async Task<UserResponseDto> VerifyAndUpsertGoogleUserAsync(string idToken)
     {
-        GoogleJsonWebSignature.Payload payload;
-        try
-        {
-            var clientId = _configuration["GoogleAuth:ClientId"];
-            var hasValidClientId = !string.IsNullOrWhiteSpace(clientId) &&
-                                   !clientId.StartsWith("YOUR_GOOGLE_CLIENT_ID", StringComparison.OrdinalIgnoreCase);
+        var clientId = _configuration["GoogleAuth:ClientId"];
+        var hasValidClientId = !string.IsNullOrWhiteSpace(clientId) &&
+                               !clientId.StartsWith("YOUR_GOOGLE_CLIENT_ID", StringComparison.OrdinalIgnoreCase);
 
-            var validationSettings = new GoogleJsonWebSignature.ValidationSettings
-            {
-                Audience = hasValidClientId ? new[] { clientId! } : null
-            };
-
-            payload = await GoogleJsonWebSignature.ValidateAsync(dto.IdToken, validationSettings);
-        }
-        catch (InvalidJwtException ex)
+        var validationSettings = new GoogleJsonWebSignature.ValidationSettings
         {
-            return Unauthorized(new { message = "Xác thực Google thất bại hoặc Token đã hết hạn", details = ex.Message });
-        }
+            Audience = hasValidClientId ? new[] { clientId! } : null
+        };
+
+        var payload = await GoogleJsonWebSignature.ValidateAsync(idToken, validationSettings);
 
         var email = payload.Email.ToLower().Trim();
         var role = IsDntuAdminEmail(email) ? "Admin" : "User";
@@ -74,7 +71,7 @@ public class AuthController : ControllerBase
 
         await _context.SaveChangesAsync();
 
-        return Ok(new UserResponseDto
+        return new UserResponseDto
         {
             Id = user.Id,
             Email = user.Email,
@@ -82,119 +79,146 @@ public class AuthController : ControllerBase
             AvatarUrl = user.AvatarUrl,
             Role = user.Role,
             CreatedAt = user.CreatedAt
-        });
+        };
     }
+
     /// <summary>
-/// Nhận #id_token từ Google OAuth 2.0 và ép trình duyệt gọi Deep Link mở lại Mobile App
-/// </summary>
-[HttpGet("google-callback")]
-public ContentResult GoogleMobileCallback()
-{
-    const string html = @"<!DOCTYPE html>
+    /// Đăng nhập bằng Google ID Token (Dùng cho Web và Mobile)
+    /// </summary>
+    [HttpPost("google")]
+    public async Task<ActionResult<UserResponseDto>> GoogleLogin([FromBody] GoogleLoginRequestDto dto)
+    {
+        try
+        {
+            var userDto = await VerifyAndUpsertGoogleUserAsync(dto.IdToken);
+            return Ok(userDto);
+        }
+        catch (InvalidJwtException ex)
+        {
+            return Unauthorized(new { message = "Xác thực Google thất bại hoặc Token đã hết hạn", details = ex.Message });
+        }
+    }
+
+    /// <summary>
+    /// Nhận kết quả xác thực từ trang callback trên trình duyệt Mobile và lưu vào MemoryCache
+    /// </summary>
+    [HttpPost("google-mobile-complete")]
+    public async Task<ActionResult<UserResponseDto>> CompleteMobileGoogleLogin([FromBody] GoogleMobileCompleteDto dto)
+    {
+        try
+        {
+            var userDto = await VerifyAndUpsertGoogleUserAsync(dto.IdToken);
+            _cache.Set($"google_session_{dto.SessionId}", userDto, TimeSpan.FromMinutes(5));
+            return Ok(userDto);
+        }
+        catch (InvalidJwtException ex)
+        {
+            return Unauthorized(new { message = "Token Google không hợp lệ", details = ex.Message });
+        }
+    }
+
+    /// <summary>
+    /// Mobile App gọi endpoint này để lấy thông tin User vừa xác thực trên trình duyệt
+    /// </summary>
+    [HttpGet("google-session/{sessionId}")]
+    public ActionResult<UserResponseDto> GetMobileGoogleSession(string sessionId)
+    {
+        if (_cache.TryGetValue($"google_session_{sessionId}", out UserResponseDto? userDto) && userDto != null)
+        {
+            _cache.Remove($"google_session_{sessionId}");
+            return Ok(userDto);
+        }
+
+        return NotFound(new { message = "Phiên đăng nhập chưa hoàn tất" });
+    }
+
+    /// <summary>
+    /// Thực hiện HTTP 302 Redirect về Deep Link exp:// để Android tự mở lại Expo Go
+    /// </summary>
+    [HttpGet("google-redirect")]
+    public IActionResult GoogleMobileRedirect([FromQuery] string target)
+    {
+        if (string.IsNullOrWhiteSpace(target))
+            return BadRequest("Thiếu đường dẫn đích");
+
+        return Redirect(target);
+    }
+
+    /// <summary>
+    /// Trang HTML nhận #id_token từ Google OAuth 2.0, đồng bộ với Backend và bắn Deep Link về Expo Go
+    /// </summary>
+    [HttpGet("google-callback")]
+    public ContentResult GoogleMobileCallback()
+    {
+        const string html = @"<!DOCTYPE html>
 <html>
 <head>
-<meta charset='utf-8'/>
-<meta name='viewport' content='width=device-width, initial-scale=1'/>
-<title>Đang kết nối VietGuide...</title>
-<style>
-body { font-family: sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 90vh; background: #f8fafc; color: #0f172a; text-align: center; padding: 20px; }
-.btn { margin-top: 16px; padding: 12px 24px; background: #059669; color: #fff; text-decoration: none; border-radius: 12px; font-weight: bold; }
-</style>
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-  // 1. Lấy thông tin từ URL băm (hash)
-  const hash = window.location.hash.substring(1);
-  const params = new URLSearchParams(hash);
-  const idToken = params.get('id_token');
-  const state = params.get('state'); // Chứa exp://192.168...
-  
-  if (idToken && state) {
-    // 2. Tạo Deep Link an toàn
-    const sep = state.includes('?') ? '&' : '?';
-    const deepLinkUrl = state + sep + 'id_token=' + encodeURIComponent(idToken);
-    
-    // 3. Gắn link vào nút bấm dự phòng
-    const btn = document.getElementById('fallbackBtn');
-    btn.href = deepLinkUrl;
-    
-    // 4. Ép trình duyệt mở thẳng Deep Link ngay lập tức
-    window.location.href = deepLinkUrl;
-  } else {
-    document.getElementById('statusMsg').innerText = 'Lỗi: Không nhận được dữ liệu xác thực từ Google.';
-    document.getElementById('fallbackBtn').style.display = 'none';
-  }
-});
-</script>
+  <meta charset='utf-8'/>
+  <meta name='viewport' content='width=device-width, initial-scale=1'/>
+  <title>Đăng nhập VietGuide</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 90vh; background: #f8fafc; color: #0f172a; text-align: center; padding: 24px; margin: 0; }
+    .card { background: #fff; padding: 28px 24px; border-radius: 24px; box-shadow: 0 10px 25px rgba(0,0,0,0.06); max-width: 360px; width: 100%; border: 1px solid #e2e8f0; }
+    .btn { display: inline-block; margin-top: 18px; padding: 14px 24px; background: #059669; color: #fff; text-decoration: none; border-radius: 14px; font-weight: bold; font-size: 15px; width: 85%; }
+    .sub { font-size: 13px; color: #64748b; margin-top: 8px; line-height: 1.5; }
+  </style>
 </head>
 <body>
-<h3 id='statusMsg'>Đang đồng bộ tài khoản Google về VietGuide...</h3>
-<p style='font-size: 13px; color: #64748b; margin-top: 8px; margin-bottom: 24px;'>Nếu ứng dụng không tự động mở lại, vui lòng bấm nút bên dưới.</p>
-<a id='fallbackBtn' class='btn' href='#'>Quay lại ứng dụng</a>
+  <div class='card'>
+    <h3 id='statusMsg' style='margin: 0;'>Đang xác thực tài khoản Google...</h3>
+    <p id='subMsg' class='sub'>Vui lòng đợi trong giây lát...</p>
+    <a id='fallbackBtn' class='btn' style='display:none;' href='#'>Mở lại ứng dụng VietGuide</a>
+  </div>
+  <script>
+    (async function() {
+      const hash = window.location.hash.substring(1);
+      const params = new URLSearchParams(hash);
+      const idToken = params.get('id_token');
+      const rawState = params.get('state') || '';
+
+      const sepIndex = rawState.indexOf('|');
+      const sessionId = sepIndex !== -1 ? rawState.substring(0, sepIndex) : rawState;
+      const appReturnUrl = sepIndex !== -1 ? rawState.substring(sepIndex + 1) : '';
+
+      if (!idToken || !sessionId) {
+        document.getElementById('statusMsg').innerText = 'Không tìm thấy dữ liệu xác thực';
+        document.getElementById('subMsg').innerText = 'Vui lòng đóng cửa sổ này và thử lại.';
+        return;
+      }
+
+      try {
+        // 1. Gửi trực tiếp id_token về Backend để lưu User vào CSDL ngay lập tức
+        const res = await fetch('/api/Auth/google-mobile-complete', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sessionId: sessionId, idToken: idToken })
+        });
+
+        if (!res.ok) throw new Error('Backend từ chối xác thực');
+        const user = await res.json();
+
+        document.getElementById('statusMsg').innerText = '✅ Xin chào, ' + (user.fullname || user.email) + '!';
+        document.getElementById('subMsg').innerText = 'Đã đồng bộ thành công! Bấm nút bên dưới (hoặc dấu ✕ ở góc trên trái) để vào ứng dụng.';
+
+        if (appReturnUrl) {
+          const joiner = appReturnUrl.includes('?') ? '&' : '?';
+          const targetDeepLink = appReturnUrl + joiner + 'sessionId=' + encodeURIComponent(sessionId);
+
+          const btn = document.getElementById('fallbackBtn');
+          btn.href = targetDeepLink;
+          btn.style.display = 'inline-block';
+
+          // 2. Gọi HTTP 302 Redirect để Android tự động đóng trình duyệt mở Expo Go
+          window.location.replace('/api/Auth/google-redirect?target=' + encodeURIComponent(targetDeepLink));
+        }
+      } catch (e) {
+        document.getElementById('statusMsg').innerText = 'Xác thực thất bại';
+        document.getElementById('subMsg').innerText = e.message;
+      }
+    })();
+  </script>
 </body>
 </html>";
-    return Content(html, "text/html");
-}
-
-    [HttpPost("register")]
-    public async Task<ActionResult<UserResponseDto>> Register([FromBody] RegisterRequestDto dto)
-    {
-        var rawInput = dto.Username.Trim().ToLower();
-        var email = rawInput.Contains('@') ? rawInput : $"{rawInput}@gmail.com";
-
-        var exists = await _context.Users.AnyAsync(u => u.Email.ToLower() == email);
-        if (exists)
-        {
-            return BadRequest(new { message = "Tài khoản hoặc Email này đã được sử dụng" });
-        }
-
-        var role = IsDntuAdminEmail(email) ? "Admin" : "User";
-        var user = new User
-        {
-            Email = email,
-            Fullname = dto.Fullname.Trim(),
-            AvatarUrl = string.IsNullOrWhiteSpace(dto.AvatarUrl)
-                ? "https://ui-avatars.com/api/?name=" + Uri.EscapeDataString(dto.Fullname.Trim())
-                : dto.AvatarUrl.Trim(),
-            Role = role,
-            CreatedAt = DateTime.UtcNow
-        };
-
-        _context.Users.Add(user);
-        await _context.SaveChangesAsync();
-
-        return StatusCode(StatusCodes.Status201Created, new UserResponseDto
-        {
-            Id = user.Id,
-            Email = user.Email,
-            Fullname = user.Fullname,
-            AvatarUrl = user.AvatarUrl,
-            Role = user.Role,
-            CreatedAt = user.CreatedAt
-        });
-    }
-
-    [HttpPost("login")]
-    public async Task<ActionResult<UserResponseDto>> Login([FromBody] LoginRequestDto dto)
-    {
-        var input = dto.Username.Trim().ToLower();
-        var user = await _context.Users.FirstOrDefaultAsync(u =>
-            u.Email.ToLower() == input ||
-            u.Email.ToLower() == $"{input}@gmail.com" ||
-            (input == "kietho" && u.Email.ToLower() == "nhankiet1705@gmail.com"));
-
-        if (user == null)
-        {
-            return Unauthorized(new { message = "Tài khoản không tồn tại trong hệ thống" });
-        }
-
-        return Ok(new UserResponseDto
-        {
-            Id = user.Id,
-            Email = user.Email,
-            Fullname = user.Fullname,
-            AvatarUrl = user.AvatarUrl,
-            Role = user.Role,
-            CreatedAt = user.CreatedAt
-        });
+        return Content(html, "text/html");
     }
 }
