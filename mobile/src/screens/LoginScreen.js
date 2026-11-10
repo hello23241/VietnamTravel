@@ -3,192 +3,191 @@ import {
   View,
   Text,
   Image,
-  TextInput,
   TouchableOpacity,
   StyleSheet,
   ActivityIndicator,
   Alert,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
 } from 'react-native';
+import * as WebBrowser from 'expo-web-browser';
+import * as Linking from 'expo-linking';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { MaterialIcons } from '@expo/vector-icons';
 import { travelApi } from '../api/travelApi';
 
+WebBrowser.maybeCompleteAuthSession();
+
+const GOOGLE_CLIENT_ID =
+  process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID ||
+  '32498559750-0ioqcs2esc4v7jrjem3d67h4vf92s4q3.apps.googleusercontent.com';
+
+// Địa chỉ callback đã đăng ký trong Google Cloud Console
+const BACKEND_CALLBACK_URI = 'http://localhost:5128/api/Auth/google-callback';
+
 export default function LoginScreen({ navigation }) {
-  const [isRegister, setIsRegister] = useState(false);
-  const [fullname, setFullname] = useState('');
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = async () => {
-    if (!username.trim() || !password.trim() || (isRegister && !fullname.trim())) {
-      Alert.alert('Thông báo', 'Vui lòng điền đầy đủ các thông tin yêu cầu');
-      return;
-    }
-
-    if (isRegister && username.trim().length < 4) {
-      Alert.alert('Thông báo', 'Tên đăng nhập phải có ít nhất 4 ký tự');
-      return;
-    }
-
-    if (password.length < 6) {
-      Alert.alert('Thông báo', 'Mật khẩu phải có ít nhất 6 ký tự');
-      return;
-    }
-
+  const handleGoogleLogin = async () => {
     try {
       setLoading(true);
-      if (isRegister) {
-        const newUser = await travelApi.register(username.trim(), password, fullname.trim());
-        Alert.alert('Thành công', 'Đăng ký tài khoản thành công!');
-        await AsyncStorage.setItem('user', JSON.stringify(newUser));
-        navigation.replace('Home');
-      } else {
-        const userData = await travelApi.login(username.trim(), password);
+
+      // Tạo đường dẫn Deep Link để trình duyệt quay về đúng ứng dụng Expo
+      const appReturnUrl = Linking.createURL('google-auth');
+      const nonce = Math.random().toString(36).substring(2, 15);
+
+      const authUrl =
+        `https://accounts.google.com/o/oauth2/v2/auth` +
+        `?client_id=${encodeURIComponent(GOOGLE_CLIENT_ID)}` +
+        `&redirect_uri=${encodeURIComponent(BACKEND_CALLBACK_URI)}` +
+        `&response_type=id_token` +
+        `&scope=${encodeURIComponent('openid profile email')}` +
+        `&nonce=${encodeURIComponent(nonce)}` +
+        `&state=${encodeURIComponent(appReturnUrl)}` +
+        `&prompt=select_account`;
+
+      // Mở trình duyệt xác thực Google OAuth thật
+      const result = await WebBrowser.openAuthSessionAsync(authUrl, appReturnUrl);
+
+      if (result.type === 'success' && result.url) {
+        const match = result.url.match(/[?&#]id_token=([^&#]+)/);
+        const idToken = match ? decodeURIComponent(match[1]) : null;
+
+        if (!idToken) {
+          throw new Error('Không tìm thấy ID Token từ phản hồi của Google');
+        }
+
+        // Gửi ID Token thật về Backend xác thực chữ ký số
+        const userData = await travelApi.loginWithGoogle(idToken);
         await AsyncStorage.setItem('user', JSON.stringify(userData));
         navigation.replace('Home');
       }
     } catch (error) {
-      Alert.alert(isRegister ? 'Đăng ký thất bại' : 'Đăng nhập thất bại', error.message);
+      Alert.alert('Đăng nhập thất bại', error.message || 'Không thể xác thực với Google');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      style={styles.container}
-    >
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        <View style={styles.header}>
+    <View style={styles.container}>
+      <View style={styles.card}>
         <Image
           source={require('../../assets/icon.png')}
           style={styles.logoImage}
+          resizeMode="contain"
         />
-        <Text style={styles.brandTitle}>VietGuide</Text>
-        <Text style={styles.subtitle}>Cẩm Nang Hướng Dẫn Du Lịch Việt Nam</Text>
-      </View>
 
-        <View style={styles.formCard}>
-          <View style={styles.tabContainer}>
-            <TouchableOpacity
-              style={[styles.tabBtn, !isRegister && styles.tabBtnActive]}
-              onPress={() => setIsRegister(false)}
-            >
-              <Text style={[styles.tabText, !isRegister && styles.tabTextActive]}>Đăng nhập</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.tabBtn, isRegister && styles.tabBtnActive]}
-              onPress={() => setIsRegister(true)}
-            >
-              <Text style={[styles.tabText, isRegister && styles.tabTextActive]}>Đăng ký mới</Text>
-            </TouchableOpacity>
-          </View>
+        <Text style={styles.title}>Đăng Nhập VietGuide</Text>
+        <Text style={styles.subtitle}>
+          Sử dụng tài khoản Google để đồng bộ sổ tay chuyến đi và đánh giá điểm đến
+        </Text>
 
-          {isRegister && (
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Họ và tên</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="Ví dụ: Phạm Văn Hiếu"
-                value={fullname}
-                onChangeText={setFullname}
-                placeholderTextColor="#94a3b8"
-              />
-            </View>
+        <TouchableOpacity
+          style={styles.googleBtn}
+          activeOpacity={0.85}
+          onPress={handleGoogleLogin}
+          disabled={loading}
+        >
+          {loading ? (
+            <ActivityIndicator color="#059669" />
+          ) : (
+            <>
+              <View style={styles.googleIconBox}>
+                <Text style={styles.googleG}>G</Text>
+              </View>
+              <Text style={styles.googleBtnText}>Đăng nhập bằng Google</Text>
+            </>
           )}
+        </TouchableOpacity>
 
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Tên đăng nhập (từ 4 ký tự)</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Ví dụ: HDKiet"
-              value={username}
-              onChangeText={setUsername}
-              autoCapitalize="none"
-              placeholderTextColor="#94a3b8"
-            />
-          </View>
-
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Mật khẩu (từ 6 ký tự)</Text>
-            <View style={styles.passwordWrapper}>
-              <TextInput
-                style={styles.passwordInput}
-                placeholder="Nhập mật khẩu"
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry={!showPassword}
-                placeholderTextColor="#94a3b8"
-              />
-              <TouchableOpacity
-                style={styles.eyeBtn}
-                onPress={() => setShowPassword(!showPassword)}
-                hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-                activeOpacity={0.6}
-              >
-                <MaterialIcons
-                  name={showPassword ? 'visibility' : 'visibility-off'}
-                  size={20}
-                  color="#94a3b8"
-                />
-              </TouchableOpacity>
-            </View>
-          </View>
-
-          <TouchableOpacity
-            style={[styles.submitBtn, loading && styles.submitBtnDisabled]}
-            onPress={handleSubmit}
-            disabled={loading}
-          >
-            {loading ? (
-              <ActivityIndicator color="#ffffff" />
-            ) : (
-              <Text style={styles.submitBtnText}>{isRegister ? 'Tạo Tài Khoản' : 'Đăng Nhập'}</Text>
-            )}
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.guestBtn}
-            onPress={() => navigation.replace('Home')}
-          >
-            <Text style={styles.guestText}>Bỏ qua, khám phá với tư cách Khách</Text>
-          </TouchableOpacity>
-        </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+        <TouchableOpacity
+          style={styles.guestBtn}
+          onPress={() => navigation.replace('Home')}
+          disabled={loading}
+        >
+          <Text style={styles.guestText}>Bỏ qua, khám phá với tư cách Khách</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f8fafc' },
-  scrollContent: { flexGrow: 1, justifyContent: 'center', padding: 20 },
-  header: { alignItems: 'center', marginBottom: 28 },
-  logoImage: { width: 84, height: 84, borderRadius: 20, marginBottom: 10, backgroundColor: '#ffffff', borderWidth: 1, borderColor: '#e2e8f0' },
-  brandTitle: { fontSize: 32, fontWeight: '800', color: '#059669', letterSpacing: 0.5 },
-  subtitle: { fontSize: 14, color: '#64748b', marginTop: 4 },
-  formCard: { backgroundColor: '#ffffff', padding: 22, borderRadius: 20, borderWidth: 1, borderColor: '#e2e8f0', elevation: 3, shadowColor: '#000', shadowOpacity: 0.08, shadowRadius: 10 },
-  tabContainer: { flexDirection: 'row', backgroundColor: '#f1f5f9', borderRadius: 12, padding: 4, marginBottom: 20 },
-  tabBtn: { flex: 1, paddingVertical: 10, alignItems: 'center', borderRadius: 10 },
-  tabBtnActive: { backgroundColor: '#ffffff', shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 4, elevation: 1 },
-  tabText: { fontSize: 14, fontWeight: '600', color: '#64748b' },
-  tabTextActive: { color: '#059669', fontWeight: '700' },
-  inputGroup: { marginBottom: 14 },
-  label: { fontSize: 13, fontWeight: '600', color: '#334155', marginBottom: 6 },
-  input: { borderWidth: 1, borderColor: '#cbd5e1', borderRadius: 10, paddingHorizontal: 14, height: 46, fontSize: 14, color: '#0f172a', backgroundColor: '#f8fafc' },
-
-  passwordWrapper: { flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: '#cbd5e1', borderRadius: 10, backgroundColor: '#f8fafc' },
-  passwordInput: { flex: 1, paddingHorizontal: 14, height: 46, fontSize: 14, color: '#0f172a' },
-  eyeBtn: { paddingHorizontal: 14, height: 46, justifyContent: 'center', alignItems: 'center' },
-
-  submitBtn: { backgroundColor: '#059669', height: 48, borderRadius: 12, justifyContent: 'center', alignItems: 'center', marginTop: 10 },
-  submitBtnDisabled: { backgroundColor: '#94a3b8' },
-  submitBtnText: { color: '#ffffff', fontSize: 15, fontWeight: '700' },
-  guestBtn: { marginTop: 16, alignItems: 'center' },
-  guestText: { color: '#64748b', fontSize: 13, textDecorationLine: 'underline' },
+  container: {
+    flex: 1,
+    backgroundColor: '#f1f5f9',
+    justifyContent: 'center',
+    padding: 20,
+  },
+  card: {
+    backgroundColor: '#ffffff',
+    borderRadius: 28,
+    padding: 28,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+  },
+  logoImage: {
+    width: 96,
+    height: 96,
+    borderRadius: 22,
+    marginBottom: 14,
+    backgroundColor: '#ffffff',
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: '800',
+    color: '#0f172a',
+    marginBottom: 6,
+  },
+  subtitle: {
+    fontSize: 13,
+    color: '#64748b',
+    textAlign: 'center',
+    lineHeight: 19,
+    marginBottom: 24,
+  },
+  googleBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '100%',
+    height: 52,
+    backgroundColor: '#ffffff',
+    borderWidth: 1.5,
+    borderColor: '#cbd5e1',
+    borderRadius: 26,
+    paddingHorizontal: 16,
+    gap: 12,
+    elevation: 1,
+  },
+  googleIconBox: {
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    backgroundColor: '#4285F4',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  googleG: {
+    color: '#ffffff',
+    fontWeight: '900',
+    fontSize: 15,
+  },
+  googleBtnText: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#1e293b',
+  },
+  guestBtn: {
+    marginTop: 20,
+    paddingVertical: 6,
+  },
+  guestText: {
+    color: '#64748b',
+    fontSize: 13,
+    textDecorationLine: 'underline',
+  },
 });

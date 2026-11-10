@@ -1,12 +1,9 @@
 import apiClient from './apiClient';
 
 export const travelApi = {
-  // Xác thực
-  login: (username, password) => 
-    apiClient.post('/Auth/login', { username, password }),
-    
-  register: (username, password, fullname) => 
-    apiClient.post('/Auth/register', { username, password, fullname }),
+  // Xác thực bằng Google ID Token thật (dùng chung endpoint với Web)
+  loginWithGoogle: (idToken) =>
+    apiClient.post('/Auth/google', { idToken }),
 
   // Danh mục & Tỉnh thành
   getCategories: () => 
