@@ -26,45 +26,49 @@ export default function LoginScreen({ navigation }) {
   const [loading, setLoading] = useState(false);
 
   const handleGoogleLogin = async () => {
-    try {
-      setLoading(true);
+try {
+  setLoading(true);
 
-      // Tạo đường dẫn Deep Link để trình duyệt quay về đúng ứng dụng Expo
-      const appReturnUrl = Linking.createURL('google-auth');
-      const nonce = Math.random().toString(36).substring(2, 15);
+  // 1. Tạo đường dẫn Deep Link (Chỉ định chính xác scheme của Expo Go)
+  const appReturnUrl = Linking.createURL('google-auth');
+  const nonce = Math.random().toString(36).substring(2, 15);
 
-      const authUrl =
-        `https://accounts.google.com/o/oauth2/v2/auth` +
-        `?client_id=${encodeURIComponent(GOOGLE_CLIENT_ID)}` +
-        `&redirect_uri=${encodeURIComponent(BACKEND_CALLBACK_URI)}` +
-        `&response_type=id_token` +
-        `&scope=${encodeURIComponent('openid profile email')}` +
-        `&nonce=${encodeURIComponent(nonce)}` +
-        `&state=${encodeURIComponent(appReturnUrl)}` +
-        `&prompt=select_account`;
+  const authUrl =
+    `https://accounts.google.com/o/oauth2/v2/auth` +
+    `?client_id=${encodeURIComponent(GOOGLE_CLIENT_ID)}` +
+    `&redirect_uri=${encodeURIComponent(BACKEND_CALLBACK_URI)}` +
+    `&response_type=id_token` +
+    `&scope=${encodeURIComponent('openid profile email')}` +
+    `&nonce=${encodeURIComponent(nonce)}` +
+    `&state=${encodeURIComponent(appReturnUrl)}` +
+    `&prompt=select_account`;
 
-      // Mở trình duyệt xác thực Google OAuth thật
-      const result = await WebBrowser.openAuthSessionAsync(authUrl, appReturnUrl);
+  // 2. Mở trình duyệt và chờ trình duyệt chủ động đóng
+  const result = await WebBrowser.openAuthSessionAsync(authUrl, appReturnUrl);
 
-      if (result.type === 'success' && result.url) {
-        const match = result.url.match(/[?&#]id_token=([^&#]+)/);
-        const idToken = match ? decodeURIComponent(match[1]) : null;
+  // 3. Phân tích dữ liệu trả về sau khi ứng dụng mở lại thành công
+  if (result.type === 'success' && result.url) {
+    // Phân tích URL theo chuẩn Query Parameter
+    const parsedUrl = Linking.parse(result.url);
+    const idToken = parsedUrl.queryParams?.id_token;
 
-        if (!idToken) {
-          throw new Error('Không tìm thấy ID Token từ phản hồi của Google');
-        }
-
-        // Gửi ID Token thật về Backend xác thực chữ ký số
-        const userData = await travelApi.loginWithGoogle(idToken);
-        await AsyncStorage.setItem('user', JSON.stringify(userData));
-        navigation.replace('Home');
-      }
-    } catch (error) {
-      Alert.alert('Đăng nhập thất bại', error.message || 'Không thể xác thực với Google');
-    } finally {
-      setLoading(false);
+    if (!idToken) {
+      throw new Error('Đăng nhập thành công nhưng không tìm thấy dữ liệu định danh (Token).');
     }
-  };
+
+    // 4. Gửi Token về Backend để hoàn tất đăng nhập
+    const userData = await travelApi.loginWithGoogle(idToken);
+    await AsyncStorage.setItem('user', JSON.stringify(userData));
+    navigation.replace('Home');
+  } else if (result.type === 'cancel') {
+    console.log('Người dùng đã hủy đăng nhập');
+  }
+} catch (error) {
+  Alert.alert('Đăng nhập thất bại', error.message || 'Không thể xác thực với Google');
+} finally {
+  setLoading(false);
+}
+};
 
   return (
     <View style={styles.container}>

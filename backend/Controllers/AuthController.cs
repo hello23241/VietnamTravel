@@ -84,73 +84,56 @@ public class AuthController : ControllerBase
             CreatedAt = user.CreatedAt
         });
     }
-
-    [HttpGet("google-callback")]
-    public ContentResult GoogleMobileCallback()
-    {
-        const string html = @"<!DOCTYPE html>
+    /// <summary>
+/// Nhận #id_token từ Google OAuth 2.0 và ép trình duyệt gọi Deep Link mở lại Mobile App
+/// </summary>
+[HttpGet("google-callback")]
+public ContentResult GoogleMobileCallback()
+{
+    const string html = @"<!DOCTYPE html>
 <html>
 <head>
-  <meta charset='utf-8'/>
-  <meta name='viewport' content='width=device-width, initial-scale=1'/>
-  <title>Đang kết nối VietGuide...</title>
-  <style>
-    body { font-family: sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 90vh; background: #f8fafc; color: #0f172a; text-align: center; padding: 20px; }
-    .btn { margin-top: 16px; padding: 12px 24px; background: #059669; color: #fff; text-decoration: none; border-radius: 12px; font-weight: bold; display: none; }
-  </style>
+<meta charset='utf-8'/>
+<meta name='viewport' content='width=device-width, initial-scale=1'/>
+<title>Đang kết nối VietGuide...</title>
+<style>
+body { font-family: sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 90vh; background: #f8fafc; color: #0f172a; text-align: center; padding: 20px; }
+.btn { margin-top: 16px; padding: 12px 24px; background: #059669; color: #fff; text-decoration: none; border-radius: 12px; font-weight: bold; }
+</style>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // 1. Lấy thông tin từ URL băm (hash)
+  const hash = window.location.hash.substring(1);
+  const params = new URLSearchParams(hash);
+  const idToken = params.get('id_token');
+  const state = params.get('state'); // Chứa exp://192.168...
+  
+  if (idToken && state) {
+    // 2. Tạo Deep Link an toàn
+    const sep = state.includes('?') ? '&' : '?';
+    const deepLinkUrl = state + sep + 'id_token=' + encodeURIComponent(idToken);
+    
+    // 3. Gắn link vào nút bấm dự phòng
+    const btn = document.getElementById('fallbackBtn');
+    btn.href = deepLinkUrl;
+    
+    // 4. Ép trình duyệt mở thẳng Deep Link ngay lập tức
+    window.location.href = deepLinkUrl;
+  } else {
+    document.getElementById('statusMsg').innerText = 'Lỗi: Không nhận được dữ liệu xác thực từ Google.';
+    document.getElementById('fallbackBtn').style.display = 'none';
+  }
+});
+</script>
 </head>
 <body>
-  <h3>Đang đồng bộ tài khoản Google về VietGuide...</h3>
-  <a id='fallbackBtn' class='btn' href='#'>Chạm vào đây để quay lại ứng dụng</a>
-  <script>
-    const hash = window.location.hash.substring(1);
-    const params = new URLSearchParams(hash);
-    const idToken = params.get('id_token');
-    const state = params.get('state');
-    if (idToken && state) {
-      const sep = state.includes('?') ? '&' : '?';
-      const deepLink = state + sep + 'id_token=' + encodeURIComponent(idToken);
-      const btn = document.getElementById('fallbackBtn');
-      btn.href = deepLink;
-      btn.style.display = 'inline-block';
-      window.location.replace('/api/Auth/google-redirect?id_token=' + encodeURIComponent(idToken) + '&state=' + encodeURIComponent(state));
-    } else {
-      document.body.innerHTML = '<h3>Xác thực thất bại hoặc bị hủy. Vui lòng đóng cửa sổ này.</h3>';
-    }
-  </script>
+<h3 id='statusMsg'>Đang đồng bộ tài khoản Google về VietGuide...</h3>
+<p style='font-size: 13px; color: #64748b; margin-top: 8px; margin-bottom: 24px;'>Nếu ứng dụng không tự động mở lại, vui lòng bấm nút bên dưới.</p>
+<a id='fallbackBtn' class='btn' href='#'>Quay lại ứng dụng</a>
 </body>
 </html>";
-        return Content(html, "text/html");
-    }
-
-    [HttpGet("google-redirect")]
-    public IActionResult GoogleMobileRedirect(
-        [FromQuery(Name = "id_token")] string? idTokenSnake,
-        [FromQuery(Name = "idToken")] string? idTokenCamel,
-        [FromQuery] string? state)
-    {
-        var token = !string.IsNullOrWhiteSpace(idTokenSnake) ? idTokenSnake : idTokenCamel;
-        if (string.IsNullOrWhiteSpace(token) || string.IsNullOrWhiteSpace(state))
-        {
-            return BadRequest(new { message = "Thiếu thông tin id_token hoặc state chuyển hướng" });
-        }
-
-        var trimmedState = state.Trim();
-        var isSafeRedirect =
-            trimmedState.StartsWith("exp://", StringComparison.OrdinalIgnoreCase) ||
-            trimmedState.StartsWith("vietguide://", StringComparison.OrdinalIgnoreCase) ||
-            trimmedState.StartsWith("http://localhost", StringComparison.OrdinalIgnoreCase) ||
-            trimmedState.StartsWith("http://10.0.2.2", StringComparison.OrdinalIgnoreCase);
-
-        if (!isSafeRedirect)
-        {
-            return BadRequest(new { message = "Đường dẫn chuyển hướng (state) không hợp lệ" });
-        }
-
-        var separator = trimmedState.Contains('?') ? "&" : "?";
-        var targetUrl = $"{trimmedState}{separator}id_token={Uri.EscapeDataString(token)}";
-        return Redirect(targetUrl);
-    }
+    return Content(html, "text/html");
+}
 
     [HttpPost("register")]
     public async Task<ActionResult<UserResponseDto>> Register([FromBody] RegisterRequestDto dto)
