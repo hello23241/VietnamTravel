@@ -7,6 +7,7 @@ import {
   StyleSheet,
   ActivityIndicator,
   Alert,
+  StatusBar,
 } from 'react-native';
 import * as WebBrowser from 'expo-web-browser';
 import * as Linking from 'expo-linking';
@@ -47,15 +48,13 @@ export default function LoginScreen({ navigation }) {
       // 2. Mở trình duyệt xác thực Google OAuth
       await WebBrowser.openAuthSessionAsync(authUrl, appReturnUrl);
 
-      // 3. Ngay khi trình duyệt đóng lại (tự động qua Deep Link hoặc người dùng bấm ✕),
-      // lấy thông tin User đã được Backend xác thực thông qua sessionId
+      // 3. Lấy thông tin User đã được Backend xác thực thông qua sessionId
       const userData = await travelApi.getGoogleSession(sessionId);
       if (userData && userData.email) {
         await AsyncStorage.setItem('user', JSON.stringify(userData));
         navigation.replace('Home');
       }
     } catch (error) {
-      // Nếu người dùng chủ động hủy khi chưa chọn tài khoản thì không báo lỗi
       if (!error.message?.includes('Phiên đăng nhập chưa hoàn tất')) {
         Alert.alert('Đăng nhập thất bại', error.message || 'Không thể xác thực với Google');
       }
@@ -66,7 +65,10 @@ export default function LoginScreen({ navigation }) {
 
   return (
     <View style={styles.container}>
+      <StatusBar barStyle="dark-content" backgroundColor="#f8fafc" translucent={true} />
+
       <View style={styles.card}>
+        {/* Logo VietGuide */}
         <Image
           source={require('../../assets/icon.png')}
           style={styles.logoImage}
@@ -78,6 +80,7 @@ export default function LoginScreen({ navigation }) {
           Sử dụng tài khoản Google để đồng bộ sổ tay chuyến đi và đánh giá điểm đến
         </Text>
 
+        {/* Nút đăng nhập Google với logo chữ G 4 màu chính hãng */}
         <TouchableOpacity
           style={styles.googleBtn}
           activeOpacity={0.85}
@@ -88,18 +91,22 @@ export default function LoginScreen({ navigation }) {
             <ActivityIndicator color="#059669" />
           ) : (
             <>
-              <View style={styles.googleIconBox}>
-                <Text style={styles.googleG}>G</Text>
-              </View>
+              <Image
+                source={{ uri: 'https://developers.google.com/identity/images/g-logo.png' }}
+                style={styles.googleLogo}
+                resizeMode="contain"
+              />
               <Text style={styles.googleBtnText}>Đăng nhập bằng Google</Text>
             </>
           )}
         </TouchableOpacity>
 
+        {/* Nút vào xem nhanh ở chế độ Khách */}
         <TouchableOpacity
           style={styles.guestBtn}
           onPress={() => navigation.replace('Home')}
           disabled={loading}
+          activeOpacity={0.7}
         >
           <Text style={styles.guestText}>Bỏ qua, khám phá với tư cách Khách</Text>
         </TouchableOpacity>
@@ -111,7 +118,7 @@ export default function LoginScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f1f5f9',
+    backgroundColor: '#f8fafc',
     justifyContent: 'center',
     padding: 20,
   },
@@ -155,24 +162,18 @@ const styles = StyleSheet.create({
     height: 52,
     backgroundColor: '#ffffff',
     borderWidth: 1.5,
-    borderColor: '#cbd5e1',
+    borderColor: '#e2e8f0',
     borderRadius: 26,
     paddingHorizontal: 16,
     gap: 12,
-    elevation: 1,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOpacity: 0.06,
+    shadowRadius: 6,
   },
-  googleIconBox: {
-    width: 26,
-    height: 26,
-    borderRadius: 13,
-    backgroundColor: '#4285F4',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  googleG: {
-    color: '#ffffff',
-    fontWeight: '900',
-    fontSize: 15,
+  googleLogo: {
+    width: 22,
+    height: 22,
   },
   googleBtnText: {
     fontSize: 15,
