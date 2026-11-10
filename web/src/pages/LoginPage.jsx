@@ -88,7 +88,7 @@ export default function LoginPage() {
             </div>
           </div>
 
-          {/* Phần giữa: 3 Khối tính năng thẻ kính (Glassmorphism) giúp lấp đầy khung hình */}
+          {/* Phần giữa: 3 Khối tính năng thẻ kính giúp lấp đầy khung hình */}
           <div className="relative z-10 space-y-3 my-4">
             <div className="flex items-start gap-3.5 p-3 rounded-2xl bg-white/10 border border-white/10 backdrop-blur-md hover:bg-white/15 transition-all">
               <div className="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-500/30">
@@ -130,10 +130,10 @@ export default function LoginPage() {
           {/* Phần chân cột trái: Thống kê định lượng */}
           <div className="relative z-10 pt-3 border-t border-white/15 flex items-center justify-between text-xs text-slate-300">
             <span className="flex items-center gap-1.5 font-semibold">
-              <CheckCircle2 className="w-4 h-4 text-emerald-400" /> 20+ Tọa độ trọng điểm[cite: 14]
+              <CheckCircle2 className="w-4 h-4 text-emerald-400" /> 20+ Tọa độ trọng điểm
             </span>
             <span className="flex items-center gap-1.5 font-semibold">
-              <CheckCircle2 className="w-4 h-4 text-emerald-400" /> 15 Tỉnh thành 3 miền[cite: 14]
+              <CheckCircle2 className="w-4 h-4 text-emerald-400" /> 15 Tỉnh thành 3 miền
             </span>
             <span className="flex items-center gap-1.5 font-semibold">
               <CheckCircle2 className="w-4 h-4 text-emerald-400" /> Hoàn toàn miễn phí
@@ -155,7 +155,7 @@ export default function LoginPage() {
           </div>
 
           <div className="my-auto max-w-sm mx-auto w-full text-center space-y-5">
-            {/* Logo nhận diện gọn gàng, không dán icon tick đè lên */}
+            {/* Logo nhận diện gọn gàng */}
             <div>
               <div className="w-16 h-16 rounded-2xl bg-emerald-50 border border-emerald-100 p-2 mx-auto shadow-sm flex items-center justify-center mb-3">
                 <img
@@ -189,15 +189,15 @@ export default function LoginPage() {
               </span>
               <div className="flex items-center gap-2 text-xs text-slate-700 font-semibold">
                 <BookmarkCheck className="w-4 h-4 text-emerald-600 shrink-0" />
-                <span>Đồng bộ sổ tay điểm đến trên mọi thiết bị[cite: 14]</span>
+                <span>Đồng bộ sổ tay điểm đến trên mọi thiết bị</span>
               </div>
               <div className="flex items-center gap-2 text-xs text-slate-700 font-semibold">
                 <MessageSquareText className="w-4 h-4 text-emerald-600 shrink-0" />
-                <span>Chia sẻ đánh giá và kinh nghiệm thực tế[cite: 14]</span>
+                <span>Chia sẻ đánh giá và kinh nghiệm thực tế</span>
               </div>
               <div className="flex items-center gap-2 text-xs text-slate-700 font-semibold">
                 <Navigation className="w-4 h-4 text-emerald-600 shrink-0" />
-                <span>Mở bản đồ chỉ đường và thông tin dự toán vé[cite: 14]</span>
+                <span>Mở bản đồ chỉ đường và thông tin dự toán vé</span>
               </div>
             </div>
 
@@ -248,10 +248,10 @@ export default function LoginPage() {
               </Link>
             </div>
 
-            {/* Chứng thực bảo mật */}
+            {/* Dòng ghi chú bảo mật thân thiện */}
             <div className="flex items-center justify-center gap-1.5 text-[11px] text-slate-400 font-medium">
               <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-              <span>Bảo mật qua Google Identity Services (SSL 256-bit)</span>
+              <span>Cam kết bảo mật thông tin an toàn tuyệt đối</span>
             </div>
           </div>
 
