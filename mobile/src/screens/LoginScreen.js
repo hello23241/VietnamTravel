@@ -19,7 +19,6 @@ const GOOGLE_CLIENT_ID =
   process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID ||
   '32498559750-0ioqcs2esc4v7jrjem3d67h4vf92s4q3.apps.googleusercontent.com';
 
-// Địa chỉ callback đã đăng ký trong Google Cloud Console
 const BACKEND_CALLBACK_URI = 'http://localhost:5128/api/Auth/google-callback';
 
 export default function LoginScreen({ navigation }) {
@@ -29,8 +28,10 @@ export default function LoginScreen({ navigation }) {
     try {
       setLoading(true);
 
-      // Tạo đường dẫn Deep Link để trình duyệt quay về đúng ứng dụng Expo
+      // 1. Tạo mã phiên duy nhất và đường dẫn Deep Link chuẩn của Expo Go (exp://...)
+      const sessionId = `vg_${Date.now()}_${Math.random().toString(36).substring(2, 10)}`;
       const appReturnUrl = Linking.createURL('google-auth');
+      const stateParam = `${sessionId}|${appReturnUrl}`;
       const nonce = Math.random().toString(36).substring(2, 15);
 
       const authUrl =
@@ -40,27 +41,24 @@ export default function LoginScreen({ navigation }) {
         `&response_type=id_token` +
         `&scope=${encodeURIComponent('openid profile email')}` +
         `&nonce=${encodeURIComponent(nonce)}` +
-        `&state=${encodeURIComponent(appReturnUrl)}` +
+        `&state=${encodeURIComponent(stateParam)}` +
         `&prompt=select_account`;
 
-      // Mở trình duyệt xác thực Google OAuth thật
-      const result = await WebBrowser.openAuthSessionAsync(authUrl, appReturnUrl);
+      // 2. Mở trình duyệt xác thực Google OAuth
+      await WebBrowser.openAuthSessionAsync(authUrl, appReturnUrl);
 
-      if (result.type === 'success' && result.url) {
-        const match = result.url.match(/[?&#]id_token=([^&#]+)/);
-        const idToken = match ? decodeURIComponent(match[1]) : null;
-
-        if (!idToken) {
-          throw new Error('Không tìm thấy ID Token từ phản hồi của Google');
-        }
-
-        // Gửi ID Token thật về Backend xác thực chữ ký số
-        const userData = await travelApi.loginWithGoogle(idToken);
+      // 3. Ngay khi trình duyệt đóng lại (tự động qua Deep Link hoặc người dùng bấm ✕),
+      // lấy thông tin User đã được Backend xác thực thông qua sessionId
+      const userData = await travelApi.getGoogleSession(sessionId);
+      if (userData && userData.email) {
         await AsyncStorage.setItem('user', JSON.stringify(userData));
         navigation.replace('Home');
       }
     } catch (error) {
-      Alert.alert('Đăng nhập thất bại', error.message || 'Không thể xác thực với Google');
+      // Nếu người dùng chủ động hủy khi chưa chọn tài khoản thì không báo lỗi
+      if (!error.message?.includes('Phiên đăng nhập chưa hoàn tất')) {
+        Alert.alert('Đăng nhập thất bại', error.message || 'Không thể xác thực với Google');
+      }
     } finally {
       setLoading(false);
     }
